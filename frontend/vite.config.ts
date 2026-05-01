@@ -12,4 +12,7 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
 });
