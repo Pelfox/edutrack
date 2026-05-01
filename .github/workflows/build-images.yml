@@ -1,0 +1,78 @@
+name: "Сборка образов"
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/build-images.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/build-images.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Сборка ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: "frontend"
+            context: "./frontend"
+            dockerfile: "./frontend/Dockerfile"
+            image: "ghcr.io/pelfox/edutrack/frontend"
+          - service: "backend"
+            context: "./backend"
+            dockerfile: "./backend/Dockerfile"
+            image: "ghcr.io/pelfox/edutrack/backend"
+
+    steps:
+      - name: "Проверка репозитория"
+        uses: actions/checkout@v6
+
+      - name: "Настройка Docker Buildx"
+        uses: docker/setup-buildx-action@v4
+
+      - name: "Вход в GitHub Container Registry"
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: "ghcr.io"
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Генерация метаданных Docker"
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+            type=semver,pattern={{version}}
+
+      - name: "Сборка и публикация образа"
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}

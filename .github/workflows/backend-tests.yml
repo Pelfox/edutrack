@@ -1,0 +1,57 @@
+name: "Проверка серверной части"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-tests.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: "Тестирование и линтовка"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: "Проверка репозитория"
+        uses: actions/checkout@v6
+
+      - name: "Установка и настройка Go"
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "backend/go.mod"
+          cache: true
+          cache-dependency-path: "backend/go.sum"
+
+      - name: "Установка зависимостей"
+        run: go mod download
+
+      - name: "Линтинг"
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "The following files are not gofmt-formatted:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: "Статическая проверка кода"
+        run: go vet ./...
+
+      - name: "Запуск тестов"
+        run: go test ./...

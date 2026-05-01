@@ -1,0 +1,53 @@
+name: "Проверка клиентской части"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-lint.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-lint.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: "Тестирование и линтовка"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: "Проверка репозитория"
+        uses: actions/checkout@v6
+
+      - name: "Установка и настройка pnpm"
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10.33.2
+
+      - name: "Установка и настройка Node.j"
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: "frontend/pnpm-lock.yaml"
+
+      - name: "Установка зависимостей"
+        run: pnpm install --frozen-lockfile
+
+      - name: "Линтовка"
+        run: pnpm check
+
+      - name: "Проверка типов"
+        run: pnpm typecheck
