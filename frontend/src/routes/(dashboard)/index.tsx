@@ -3,16 +3,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { DashboardRole } from "@/components/dashboard/dashboard-layout";
 import { DashboardView } from "@/components/dashboard/dashboard-views";
 import type { AdministratorPage } from "@/components/dashboard/roles/administrator";
+import type { StudentPage } from "@/components/dashboard/roles/student";
 import type { TeacherPage } from "@/components/dashboard/roles/teacher";
 
 export const Route = createFileRoute("/(dashboard)/")({
   validateSearch: (
     search,
-  ): { administratorPage: AdministratorPage; teacherPage: TeacherPage; view: DashboardRole } => {
+  ): {
+    administratorPage: AdministratorPage;
+    studentPage: StudentPage;
+    teacherPage: TeacherPage;
+    view: DashboardRole;
+  } => {
     const view = parseDashboardRole(search.view);
 
     return {
       administratorPage: parseAdministratorPage(search.page),
+      studentPage: parseStudentPage(search.page),
       teacherPage: parseTeacherPage(search.page),
       view,
     };
@@ -21,10 +28,15 @@ export const Route = createFileRoute("/(dashboard)/")({
 });
 
 function DashboardIndexPage() {
-  const { administratorPage, teacherPage, view } = Route.useSearch();
+  const { administratorPage, studentPage, teacherPage, view } = Route.useSearch();
 
   return (
-    <DashboardView administratorPage={administratorPage} role={view} teacherPage={teacherPage} />
+    <DashboardView
+      administratorPage={administratorPage}
+      role={view}
+      studentPage={studentPage}
+      teacherPage={teacherPage}
+    />
   );
 }
 
@@ -45,6 +57,14 @@ function parseAdministratorPage(page: unknown): AdministratorPage {
 }
 
 function parseTeacherPage(page: unknown): TeacherPage {
+  if (page === "home" || page === "disciplines" || page === "grades" || page === "schedule") {
+    return page;
+  }
+
+  return "home";
+}
+
+function parseStudentPage(page: unknown): StudentPage {
   if (page === "home" || page === "disciplines" || page === "grades" || page === "schedule") {
     return page;
   }

@@ -8,6 +8,7 @@ import type {
 import { DashboardShell } from "@/components/dashboard/dashboard-layout";
 import type { AdministratorPage } from "@/components/dashboard/roles/administrator";
 import { AdministratorDashboard } from "@/components/dashboard/roles/administrator";
+import type { StudentPage } from "@/components/dashboard/roles/student";
 import { StudentDashboard } from "@/components/dashboard/roles/student";
 import type { TeacherPage } from "@/components/dashboard/roles/teacher";
 import { TeacherDashboard } from "@/components/dashboard/roles/teacher";
@@ -15,17 +16,19 @@ import { TeacherDashboard } from "@/components/dashboard/roles/teacher";
 export function DashboardView({
   role,
   administratorPage,
+  studentPage,
   teacherPage,
 }: {
   role: DashboardRole;
   administratorPage: AdministratorPage;
+  studentPage: StudentPage;
   teacherPage: TeacherPage;
 }) {
   return (
-    <DashboardShell config={getDashboardConfig(role, administratorPage, teacherPage)}>
+    <DashboardShell config={getDashboardConfig(role, administratorPage, teacherPage, studentPage)}>
       {role === "administrator" && <AdministratorDashboard page={administratorPage} />}
       {role === "teacher" && <TeacherDashboard page={teacherPage} />}
-      {role === "student" && <StudentDashboard />}
+      {role === "student" && <StudentDashboard page={studentPage} />}
     </DashboardShell>
   );
 }
@@ -34,6 +37,7 @@ function getDashboardConfig(
   role: DashboardRole,
   administratorPage: AdministratorPage,
   teacherPage: TeacherPage,
+  studentPage: StudentPage,
 ): DashboardConfig {
   if (role === "administrator") {
     return {
@@ -87,10 +91,30 @@ function getDashboardConfig(
 
   return {
     navItems: [
-      { icon: House, label: "Главная", active: true, href: "/?view=student" },
-      { icon: BookOpen, label: "Дисциплины" },
-      { icon: GraduationCap, label: "Оценки" },
-      { icon: CalendarDays, label: "Расписание" },
+      {
+        icon: House,
+        label: "Главная",
+        active: studentPage === "home",
+        href: "/?view=student&page=home",
+      },
+      {
+        icon: BookOpen,
+        label: "Дисциплины",
+        active: studentPage === "disciplines",
+        href: "/?view=student&page=disciplines",
+      },
+      {
+        icon: GraduationCap,
+        label: "Оценки",
+        active: studentPage === "grades",
+        href: "/?view=student&page=grades",
+      },
+      {
+        icon: CalendarDays,
+        label: "Расписание",
+        active: studentPage === "schedule",
+        href: "/?view=student&page=schedule",
+      },
     ],
     searchPlaceholder: "Поиск курсов, материалов...",
     user: {

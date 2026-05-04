@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Bell, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -183,7 +183,7 @@ function DashboardTopBar({ placeholder }: { placeholder: string }) {
   const { open } = useSidebar();
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6 py-3.5">
+    <header className="flex h-16 shrink-0 items-center border-b border-border px-6 py-3.5">
       <div className="flex items-center gap-3">
         {!open && <SidebarToggleButton />}
         <div className="relative h-9 w-[448px]">
@@ -195,15 +195,6 @@ function DashboardTopBar({ placeholder }: { placeholder: string }) {
           />
         </div>
       </div>
-      <Button
-        aria-label="Уведомления"
-        className="relative size-9 rounded-lg text-foreground"
-        size="icon"
-        variant="ghost"
-      >
-        <Bell className="size-4" />
-        <span className="absolute left-[22px] top-1.5 size-2 rounded-full bg-destructive" />
-      </Button>
     </header>
   );
 }
