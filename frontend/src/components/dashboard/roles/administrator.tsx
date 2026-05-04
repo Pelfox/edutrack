@@ -21,6 +21,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { DashboardDialogConfig } from "@/components/dashboard/dashboard-dialogs";
+import { DashboardActionDialog } from "@/components/dashboard/dashboard-dialogs";
 import type { ActivityItem, Metric, TopStudent } from "@/components/dashboard/dashboard-widgets";
 import {
   ActivityList,
@@ -211,6 +213,30 @@ const subjectChartConfig = {
   },
 } satisfies ChartConfig;
 
+const addStudentDialog: DashboardDialogConfig = {
+  title: "Добавить студента",
+  description: "Заполните основные данные студента для добавления в систему.",
+  submitLabel: "Добавить",
+  fields: [
+    { label: "ФИО", name: "student-name", placeholder: "Иванов Иван Иванович" },
+    { label: "Группа", name: "student-group", placeholder: "ЭФБО-01-24" },
+    { label: "Email", name: "student-email", placeholder: "ivanov@example.com", type: "email" },
+    { label: "Телефон", name: "student-phone", placeholder: "+7 (999) 123-45-67" },
+  ],
+};
+
+const addCourseDialog: DashboardDialogConfig = {
+  title: "Добавить курс",
+  description: "Создайте новую дисциплину и назначьте преподавателя.",
+  submitLabel: "Добавить",
+  fields: [
+    { label: "Название", name: "course-title", placeholder: "Математический анализ" },
+    { label: "Преподаватель", name: "course-teacher", placeholder: "Иванов И.И." },
+    { label: "Категория", name: "course-category", placeholder: "Математика" },
+    { label: "Семестр", name: "course-term", placeholder: "Весенний 2026" },
+  ],
+};
+
 export function AdministratorDashboard({ page }: { page: AdministratorPage }) {
   if (page === "students") {
     return <AdministratorStudentsPage />;
@@ -260,6 +286,7 @@ function AdministratorStudentsPage() {
     <div className="flex flex-col gap-6">
       <PageHeaderWithAction
         actionLabel="Добавить студента"
+        dialog={addStudentDialog}
         description="Управление списком студентов и их данными"
         title="Студенты"
       />
@@ -274,6 +301,7 @@ function AdministratorDisciplinesPage() {
     <div className="flex flex-col gap-6">
       <PageHeaderWithAction
         actionLabel="Добавить курс"
+        dialog={addCourseDialog}
         description="Управление учебными курсами и программами"
         title="Дисциплины"
       />
@@ -371,10 +399,12 @@ function PageHeaderWithAction({
   title,
   description,
   actionLabel,
+  dialog,
 }: {
   title: string;
   description: string;
   actionLabel: string;
+  dialog: DashboardDialogConfig;
 }) {
   return (
     <div className="flex h-16 items-center justify-between">
@@ -382,10 +412,15 @@ function PageHeaderWithAction({
         <h1 className="h-9 text-[30px] font-semibold leading-9 text-foreground">{title}</h1>
         <p className="h-6 text-base leading-6 text-muted-foreground">{description}</p>
       </div>
-      <Button className="h-9 rounded-lg px-3">
-        <Plus className="size-4" />
-        {actionLabel}
-      </Button>
+      <DashboardActionDialog
+        config={dialog}
+        trigger={
+          <Button className="h-9 rounded-lg px-3">
+            <Plus className="size-4" />
+            {actionLabel}
+          </Button>
+        }
+      />
     </div>
   );
 }

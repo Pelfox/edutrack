@@ -29,7 +29,10 @@ export type ScheduleItem = {
   id: string;
   time: string;
   title: string;
-  detail: string;
+  meta: {
+    icon: LucideIcon;
+    label: string;
+  }[];
   status: string;
   statusVariant?: "primary" | "secondary" | "outline";
 };
@@ -166,7 +169,14 @@ export function ScheduleList({ items }: { items: ScheduleItem[] }) {
               <div className="truncate text-base font-medium leading-6 text-foreground">
                 {item.title}
               </div>
-              <div className="truncate text-sm leading-5 text-muted-foreground">{item.detail}</div>
+              <div className="flex flex-wrap items-center gap-3 text-sm leading-5 text-muted-foreground">
+                {item.meta.map((metaItem) => (
+                  <span className="flex min-w-0 items-center gap-1" key={metaItem.label}>
+                    <metaItem.icon className="size-3.5 shrink-0" />
+                    <span className="truncate">{metaItem.label}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
           <StatusBadge variant={item.statusVariant}>{item.status}</StatusBadge>

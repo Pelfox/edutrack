@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Clock3, GraduationCap } from "lucide-react";
+import { BarChart3, BookOpen, Clock3, GraduationCap, MapPin } from "lucide-react";
 
 import type {
   CourseItem,
@@ -20,7 +20,10 @@ const scheduleItems: ScheduleItem[] = [
     id: "student-finished-class",
     time: "09:00",
     title: "Математический анализ",
-    detail: "Проф. Смирнова А.В. • Ауд. 215",
+    meta: [
+      { icon: GraduationCap, label: "Проф. Смирнова А.В." },
+      { icon: MapPin, label: "Ауд. 215" },
+    ],
     status: "Завершено",
     statusVariant: "secondary",
   },
@@ -28,7 +31,10 @@ const scheduleItems: ScheduleItem[] = [
     id: "student-upcoming-class-1",
     time: "09:00",
     title: "Математический анализ",
-    detail: "Проф. Смирнова А.В. • Ауд. 215",
+    meta: [
+      { icon: GraduationCap, label: "Проф. Смирнова А.В." },
+      { icon: MapPin, label: "Ауд. 215" },
+    ],
     status: "Предстоит",
     statusVariant: "primary",
   },
@@ -36,7 +42,10 @@ const scheduleItems: ScheduleItem[] = [
     id: "student-upcoming-class-2",
     time: "09:00",
     title: "Математический анализ",
-    detail: "Проф. Смирнова А.В. • Ауд. 215",
+    meta: [
+      { icon: GraduationCap, label: "Проф. Смирнова А.В." },
+      { icon: MapPin, label: "Ауд. 215" },
+    ],
     status: "Предстоит",
     statusVariant: "primary",
   },

@@ -3,19 +3,29 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { DashboardRole } from "@/components/dashboard/dashboard-layout";
 import { DashboardView } from "@/components/dashboard/dashboard-views";
 import type { AdministratorPage } from "@/components/dashboard/roles/administrator";
+import type { TeacherPage } from "@/components/dashboard/roles/teacher";
 
 export const Route = createFileRoute("/(dashboard)/")({
-  validateSearch: (search): { page: AdministratorPage; view: DashboardRole } => ({
-    page: parseAdministratorPage(search.page),
-    view: parseDashboardRole(search.view),
-  }),
+  validateSearch: (
+    search,
+  ): { administratorPage: AdministratorPage; teacherPage: TeacherPage; view: DashboardRole } => {
+    const view = parseDashboardRole(search.view);
+
+    return {
+      administratorPage: parseAdministratorPage(search.page),
+      teacherPage: parseTeacherPage(search.page),
+      view,
+    };
+  },
   component: DashboardIndexPage,
 });
 
 function DashboardIndexPage() {
-  const { page, view } = Route.useSearch();
+  const { administratorPage, teacherPage, view } = Route.useSearch();
 
-  return <DashboardView administratorPage={page} role={view} />;
+  return (
+    <DashboardView administratorPage={administratorPage} role={view} teacherPage={teacherPage} />
+  );
 }
 
 function parseDashboardRole(view: unknown): DashboardRole {
@@ -28,6 +38,14 @@ function parseDashboardRole(view: unknown): DashboardRole {
 
 function parseAdministratorPage(page: unknown): AdministratorPage {
   if (page === "home" || page === "students" || page === "disciplines" || page === "analytics") {
+    return page;
+  }
+
+  return "home";
+}
+
+function parseTeacherPage(page: unknown): TeacherPage {
+  if (page === "home" || page === "disciplines" || page === "grades" || page === "schedule") {
     return page;
   }
 

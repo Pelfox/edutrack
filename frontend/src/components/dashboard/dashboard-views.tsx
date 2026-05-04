@@ -9,19 +9,22 @@ import { DashboardShell } from "@/components/dashboard/dashboard-layout";
 import type { AdministratorPage } from "@/components/dashboard/roles/administrator";
 import { AdministratorDashboard } from "@/components/dashboard/roles/administrator";
 import { StudentDashboard } from "@/components/dashboard/roles/student";
+import type { TeacherPage } from "@/components/dashboard/roles/teacher";
 import { TeacherDashboard } from "@/components/dashboard/roles/teacher";
 
 export function DashboardView({
   role,
   administratorPage,
+  teacherPage,
 }: {
   role: DashboardRole;
   administratorPage: AdministratorPage;
+  teacherPage: TeacherPage;
 }) {
   return (
-    <DashboardShell config={getDashboardConfig(role, administratorPage)}>
+    <DashboardShell config={getDashboardConfig(role, administratorPage, teacherPage)}>
       {role === "administrator" && <AdministratorDashboard page={administratorPage} />}
-      {role === "teacher" && <TeacherDashboard />}
+      {role === "teacher" && <TeacherDashboard page={teacherPage} />}
       {role === "student" && <StudentDashboard />}
     </DashboardShell>
   );
@@ -30,6 +33,7 @@ export function DashboardView({
 function getDashboardConfig(
   role: DashboardRole,
   administratorPage: AdministratorPage,
+  teacherPage: TeacherPage,
 ): DashboardConfig {
   if (role === "administrator") {
     return {
@@ -47,10 +51,30 @@ function getDashboardConfig(
   if (role === "teacher") {
     return {
       navItems: [
-        { icon: House, label: "Главная", active: true, href: "/?view=teacher" },
-        { icon: BookOpen, label: "Мои дисциплины" },
-        { icon: GraduationCap, label: "Оценки" },
-        { icon: CalendarDays, label: "Расписание" },
+        {
+          icon: House,
+          label: "Главная",
+          active: teacherPage === "home",
+          href: "/?view=teacher&page=home",
+        },
+        {
+          icon: BookOpen,
+          label: "Мои дисциплины",
+          active: teacherPage === "disciplines",
+          href: "/?view=teacher&page=disciplines",
+        },
+        {
+          icon: GraduationCap,
+          label: "Оценки",
+          active: teacherPage === "grades",
+          href: "/?view=teacher&page=grades",
+        },
+        {
+          icon: CalendarDays,
+          label: "Расписание",
+          active: teacherPage === "schedule",
+          href: "/?view=teacher&page=schedule",
+        },
       ],
       searchPlaceholder: "Поиск студентов, курсов...",
       user: {

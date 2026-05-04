@@ -17,6 +17,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 export type DashboardRole = "administrator" | "teacher" | "student";
@@ -70,21 +71,14 @@ export function DashboardShell({
 function DashboardSidebar({ config }: { config: DashboardConfig }) {
   return (
     <Sidebar
-      collapsible="none"
+      collapsible="offcanvas"
       className="h-svh border-r border-sidebar-border bg-sidebar pr-px text-sidebar-foreground"
     >
       <SidebarHeader className="h-16 w-[255px] flex-row items-center justify-between gap-3 border-b border-sidebar-border px-4 py-0">
         <div className="min-w-px flex-1 text-lg font-semibold leading-7 text-sidebar-foreground">
           EduTrack
         </div>
-        <Button
-          aria-label="Свернуть боковую панель"
-          className="size-9 rounded-lg px-2.5 text-sidebar-foreground hover:bg-transparent"
-          size="icon"
-          variant="ghost"
-        >
-          <Menu className="size-4" strokeWidth={2} />
-        </Button>
+        <SidebarToggleButton />
       </SidebarHeader>
 
       <SidebarContent className="w-[255px] bg-sidebar px-3 pt-3">
@@ -168,16 +162,38 @@ function UserSummary({ user }: { user: DashboardUser }) {
   );
 }
 
+function SidebarToggleButton() {
+  const { toggleSidebar } = useSidebar();
+
+  return (
+    <Button
+      aria-label="Переключить боковую панель"
+      className="size-9 rounded-lg px-2.5 text-sidebar-foreground hover:bg-transparent"
+      onClick={toggleSidebar}
+      size="icon"
+      type="button"
+      variant="ghost"
+    >
+      <Menu className="size-4" strokeWidth={2} />
+    </Button>
+  );
+}
+
 function DashboardTopBar({ placeholder }: { placeholder: string }) {
+  const { open } = useSidebar();
+
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-6 py-3.5">
-      <div className="relative h-9 w-[448px]">
-        <Search className="-translate-y-1/2 absolute left-3 top-1/2 size-4 text-muted-foreground" />
-        <Input
-          aria-label="Поиск"
-          className="h-9 border-transparent bg-muted/50 pl-9 text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
-          placeholder={placeholder}
-        />
+      <div className="flex items-center gap-3">
+        {!open && <SidebarToggleButton />}
+        <div className="relative h-9 w-[448px]">
+          <Search className="-translate-y-1/2 absolute left-3 top-1/2 size-4 text-muted-foreground" />
+          <Input
+            aria-label="Поиск"
+            className="h-9 border-transparent bg-muted/50 pl-9 text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
+            placeholder={placeholder}
+          />
+        </div>
       </div>
       <Button
         aria-label="Уведомления"
