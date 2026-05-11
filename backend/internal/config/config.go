@@ -17,6 +17,8 @@ type AppConfig struct {
 	// ListenAddr - адрес, на котором необходимо запустить веб-сервер.
 	// Значение по умолчанию: ":8000".
 	ListenAddr string `koanf:"listen_addr"`
+	// DatabaseURL - строка подключения к PostgreSQL.
+	DatabaseURL string `koanf:"database_url"`
 }
 
 // LoadConfig загружает все значения для конфигурации из .env-файла или переменных окружения.
