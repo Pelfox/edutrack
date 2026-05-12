@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { AuthUser } from "@/lib/context/auth";
 import { useAuth } from "@/lib/context/auth";
+import type { DashboardPage } from "@/lib/dashboard-routing";
+import { getDashboardRole, isDashboardPageAvailable } from "@/lib/dashboard-routing";
 
 const loginSchema = z.object({
   email: z.string().email("Введите корректный e-mail адрес."),
@@ -19,12 +22,26 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const Route = createFileRoute("/(auth)/login")({
+  validateSearch: (
+    search,
+  ): {
+    redirect?: string;
+  } => {
+    if (typeof search.redirect === "string") {
+      return {
+        redirect: search.redirect,
+      };
+    }
+
+    return {};
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
   const auth = useAuth();
   const router = useRouter();
+  const search = Route.useSearch();
   const emailId = useId();
   const passwordId = useId();
 
@@ -42,7 +59,7 @@ function LoginPage() {
         email: values.email.trim(),
         password: values.password,
       });
-      router.history.push(`/?view=${user?.role ?? "student"}&page=home`);
+      router.history.push(getRedirectPath(search.redirect, user));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Не удалось войти в аккаунт.");
     }
@@ -104,4 +121,50 @@ function LoginPage() {
       </form>
     </div>
   );
+}
+
+function getRedirectPath(redirect: string | undefined, user: AuthUser | null) {
+  if (redirect?.startsWith("/") !== true || redirect.startsWith("//")) {
+    return "/";
+  }
+
+  const page = getDashboardPageByPath(redirect);
+
+  if (!page) {
+    return "/";
+  }
+
+  const role = getDashboardRole(user?.role);
+
+  return isDashboardPageAvailable(role, page) ? redirect : "/";
+}
+
+function getDashboardPageByPath(path: string): DashboardPage | null {
+  const pathname = path.split(/[?#]/)[0];
+
+  if (pathname === "/") {
+    return "home";
+  }
+
+  if (pathname === "/students") {
+    return "students";
+  }
+
+  if (pathname === "/disciplines") {
+    return "disciplines";
+  }
+
+  if (pathname === "/analytics") {
+    return "analytics";
+  }
+
+  if (pathname === "/grades") {
+    return "grades";
+  }
+
+  if (pathname === "/schedule") {
+    return "schedule";
+  }
+
+  return null;
 }

@@ -17,8 +17,7 @@ export type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => getAuthToken() !== null);
+  const [user, setUser] = useState<AuthUser | null>(() => getInitialAuthUser());
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     const { data, error } = await apiClient.POST("/auth/login", {
@@ -33,27 +32,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Сервер не вернул токен авторизации.");
     }
 
-    setAuthToken(data.token);
-    setUser(data.user ?? null);
-    setIsAuthenticated(true);
+    const authenticatedUser = data.user ?? getAuthUserFromToken(data.token);
+    if (!authenticatedUser?.role) {
+      throw new Error("Сервер не вернул роль пользователя.");
+    }
 
-    return data.user ?? null;
+    setAuthToken(data.token);
+    setUser(authenticatedUser);
+
+    return authenticatedUser;
   }, []);
 
   const logout = useCallback(() => {
     clearAuthToken();
     setUser(null);
-    setIsAuthenticated(false);
   }, []);
 
   const value = useMemo(
     () => ({
-      isAuthenticated,
+      isAuthenticated: user !== null,
       login,
       logout,
       user,
     }),
-    [isAuthenticated, login, logout, user],
+    [login, logout, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -72,4 +74,65 @@ export function useAuth() {
 
 function getAuthErrorMessage(error: components["schemas"]["dto.Error"]) {
   return error.message ?? error.error ?? "Не удалось войти в аккаунт.";
+}
+
+function getInitialAuthUser() {
+  const token = getAuthToken();
+
+  if (!token) {
+    return null;
+  }
+
+  const tokenUser = getAuthUserFromToken(token);
+
+  if (!tokenUser) {
+    clearAuthToken();
+    return null;
+  }
+
+  return tokenUser;
+}
+
+function getAuthUserFromToken(token: string): AuthUser | null {
+  const tokenPayload = decodeTokenPayload(token);
+
+  if (!tokenPayload || isExpired(tokenPayload.exp) || !isUserRole(tokenPayload.role)) {
+    return null;
+  }
+
+  if (typeof tokenPayload.user_id === "string") {
+    return {
+      id: tokenPayload.user_id,
+      role: tokenPayload.role,
+    };
+  }
+
+  return {
+    role: tokenPayload.role,
+  };
+}
+
+function decodeTokenPayload(token: string): Record<string, unknown> | null {
+  const [, payload] = token.split(".");
+
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = payload.replaceAll("-", "+").replaceAll("_", "/");
+    const padding = "=".repeat((4 - (normalizedPayload.length % 4)) % 4);
+
+    return JSON.parse(atob(`${normalizedPayload}${padding}`));
+  } catch {
+    return null;
+  }
+}
+
+function isExpired(expiresAt: unknown) {
+  return typeof expiresAt === "number" && expiresAt * 1000 <= Date.now();
+}
+
+function isUserRole(role: unknown): role is NonNullable<AuthUser["role"]> {
+  return role === "administrator" || role === "teacher" || role === "student";
 }
