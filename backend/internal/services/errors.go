@@ -15,6 +15,9 @@ var (
 	// ErrUserNotFound возвращается, если пользователь не найден.
 	ErrUserNotFound = errors.New("user not found")
 
+	// ErrNotFound возвращается, если запрошенная сущность не найдена.
+	ErrNotFound = errors.New("not found")
+
 	// ErrDuplicateUserEmail возвращается при попытке использовать уже занятый email.
 	ErrDuplicateUserEmail = errors.New("user email already exists")
 

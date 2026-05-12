@@ -23,14 +23,23 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 
 	router := gin.Default()
 	userRepository := repositories.NewUserRepository(db)
+	specialtyRepository := repositories.NewSpecialtyRepository(db)
+	groupRepository := repositories.NewGroupRepository(db)
 	userService := services.NewUserService(userRepository)
 	authService := services.NewAuthService(userRepository, appConfig.JWTSecret)
+	specialtyService := services.NewSpecialtyService(specialtyRepository)
+	groupService := services.NewGroupService(groupRepository)
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService)
+	specialtyController := controllers.NewSpecialtyController(specialtyService)
+	groupController := controllers.NewGroupController(groupService)
 
 	api := router.Group("/api")
 	authController.RegisterRoutes(api.Group("/auth"))
-	userController.RegisterRoutes(api.Group("/users", controllers.AuthMiddleware(authService)))
+	authorized := api.Group("", controllers.AuthMiddleware(authService))
+	userController.RegisterRoutes(authorized.Group("/users"))
+	specialtyController.RegisterRoutes(authorized.Group("/specialties"))
+	groupController.RegisterRoutes(authorized.Group("/groups"))
 
 	// Запускаем HTTP-сервер и ожидаем новые подключения.
 	if err := router.Run(appConfig.ListenAddr); err != nil {

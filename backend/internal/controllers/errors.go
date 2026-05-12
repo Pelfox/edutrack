@@ -29,6 +29,8 @@ func mapError(err error) (int, string, string) {
 		return http.StatusForbidden, "forbidden", "access denied"
 	case errors.Is(err, services.ErrUserNotFound):
 		return http.StatusNotFound, "not_found", "user not found"
+	case errors.Is(err, services.ErrNotFound):
+		return http.StatusNotFound, "not_found", "resource not found"
 	case errors.Is(err, services.ErrDuplicateUserEmail):
 		return http.StatusConflict, "duplicate_email", "user with this email already exists"
 	default:
