@@ -28,6 +28,18 @@ func (controller *SpecialtyController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // Create обрабатывает создание специальности.
+// @Summary Создать специальность
+// @Tags specialties
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateSpecialty true "Данные специальности"
+// @Success 201 {object} dto.Specialty
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /specialties [post]
 func (controller *SpecialtyController) Create(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -51,6 +63,14 @@ func (controller *SpecialtyController) Create(ctx *gin.Context) {
 }
 
 // List обрабатывает получение списка специальностей.
+// @Summary Получить список специальностей
+// @Tags specialties
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.Specialty
+// @Failure 401 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /specialties [get]
 func (controller *SpecialtyController) List(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -68,6 +88,17 @@ func (controller *SpecialtyController) List(ctx *gin.Context) {
 }
 
 // GetByID обрабатывает получение специальности по идентификатору.
+// @Summary Получить специальность по идентификатору
+// @Tags specialties
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор специальности"
+// @Success 200 {object} dto.Specialty
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /specialties/{id} [get]
 func (controller *SpecialtyController) GetByID(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -85,6 +116,20 @@ func (controller *SpecialtyController) GetByID(ctx *gin.Context) {
 }
 
 // Update обрабатывает обновление специальности.
+// @Summary Обновить специальность
+// @Tags specialties
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор специальности"
+// @Param request body dto.UpdateSpecialty true "Данные специальности"
+// @Success 200 {object} dto.Specialty
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /specialties/{id} [patch]
 func (controller *SpecialtyController) Update(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -108,6 +153,18 @@ func (controller *SpecialtyController) Update(ctx *gin.Context) {
 }
 
 // Delete обрабатывает удаление специальности.
+// @Summary Удалить специальность
+// @Tags specialties
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор специальности"
+// @Success 204
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /specialties/{id} [delete]
 func (controller *SpecialtyController) Delete(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {

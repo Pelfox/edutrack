@@ -28,6 +28,18 @@ func (controller *GroupController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // Create обрабатывает создание группы.
+// @Summary Создать группу
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateGroup true "Данные группы"
+// @Success 201 {object} dto.Group
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /groups [post]
 func (controller *GroupController) Create(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -51,6 +63,14 @@ func (controller *GroupController) Create(ctx *gin.Context) {
 }
 
 // List обрабатывает получение списка групп.
+// @Summary Получить список групп
+// @Tags groups
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.Group
+// @Failure 401 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /groups [get]
 func (controller *GroupController) List(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -68,6 +88,17 @@ func (controller *GroupController) List(ctx *gin.Context) {
 }
 
 // GetByID обрабатывает получение группы по идентификатору.
+// @Summary Получить группу по идентификатору
+// @Tags groups
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор группы"
+// @Success 200 {object} dto.Group
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /groups/{id} [get]
 func (controller *GroupController) GetByID(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -85,6 +116,20 @@ func (controller *GroupController) GetByID(ctx *gin.Context) {
 }
 
 // Update обрабатывает частичное обновление группы.
+// @Summary Частично обновить группу
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор группы"
+// @Param request body dto.UpdateGroup true "Данные группы"
+// @Success 200 {object} dto.Group
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /groups/{id} [patch]
 func (controller *GroupController) Update(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -108,6 +153,18 @@ func (controller *GroupController) Update(ctx *gin.Context) {
 }
 
 // Delete обрабатывает удаление группы.
+// @Summary Удалить группу
+// @Tags groups
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор группы"
+// @Success 204
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /groups/{id} [delete]
 func (controller *GroupController) Delete(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {

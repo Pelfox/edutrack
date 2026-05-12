@@ -27,6 +27,19 @@ func (controller *UserController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // Create обрабатывает создание пользователя.
+// @Summary Создать пользователя
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateUser true "Данные пользователя"
+// @Success 201 {object} dto.User
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 409 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /users [post]
 func (controller *UserController) Create(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -50,6 +63,18 @@ func (controller *UserController) Create(ctx *gin.Context) {
 }
 
 // GetByID обрабатывает получение пользователя по идентификатору.
+// @Summary Получить пользователя по идентификатору
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор пользователя"
+// @Success 200 {object} dto.User
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /users/{id} [get]
 func (controller *UserController) GetByID(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -67,6 +92,21 @@ func (controller *UserController) GetByID(ctx *gin.Context) {
 }
 
 // Update обрабатывает частичное обновление пользователя.
+// @Summary Частично обновить пользователя
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор пользователя"
+// @Param request body dto.UpdateUser true "Данные пользователя"
+// @Success 200 {object} dto.User
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 409 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /users/{id} [patch]
 func (controller *UserController) Update(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -90,6 +130,18 @@ func (controller *UserController) Update(ctx *gin.Context) {
 }
 
 // Delete обрабатывает удаление пользователя.
+// @Summary Удалить пользователя
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор пользователя"
+// @Success 204
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /users/{id} [delete]
 func (controller *UserController) Delete(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {

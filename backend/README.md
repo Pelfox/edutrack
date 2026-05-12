@@ -38,6 +38,15 @@ cp .env.example .env
 go run ./cmd/main.go
 ```
 
+### OpenAPI
+
+Документация API доступна после запуска сервера по адресу `/swagger/index.html`. Спецификация
+доступна по адресу `/openapi.json` и
+генерируется при помощи `swag`:
+```bash
+swag init --v3.1 --parseInternal --generalInfo main.go --dir cmd,internal/controllers,internal/dto,internal/repositories --output docs --outputTypes go,json,yaml
+```
+
 ### Сборка через Docker
 
 Для каждой версии, прошедшей интеграционное тестирование и готовой к выпуску, создаются готовые

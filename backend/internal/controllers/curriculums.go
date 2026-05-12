@@ -28,6 +28,18 @@ func (controller *CurriculumController) RegisterRoutes(router *gin.RouterGroup) 
 }
 
 // Create обрабатывает создание учебного плана.
+// @Summary Создать учебный план
+// @Tags curriculums
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateCurriculum true "Данные учебного плана"
+// @Success 201 {object} dto.Curriculum
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /curriculums [post]
 func (controller *CurriculumController) Create(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -51,6 +63,14 @@ func (controller *CurriculumController) Create(ctx *gin.Context) {
 }
 
 // List обрабатывает получение списка учебных планов.
+// @Summary Получить список учебных планов
+// @Tags curriculums
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.Curriculum
+// @Failure 401 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /curriculums [get]
 func (controller *CurriculumController) List(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -68,6 +88,17 @@ func (controller *CurriculumController) List(ctx *gin.Context) {
 }
 
 // GetByID обрабатывает получение учебного плана по идентификатору.
+// @Summary Получить учебный план по идентификатору
+// @Tags curriculums
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор учебного плана"
+// @Success 200 {object} dto.Curriculum
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /curriculums/{id} [get]
 func (controller *CurriculumController) GetByID(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -85,6 +116,20 @@ func (controller *CurriculumController) GetByID(ctx *gin.Context) {
 }
 
 // Update обрабатывает частичное обновление учебного плана.
+// @Summary Частично обновить учебный план
+// @Tags curriculums
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор учебного плана"
+// @Param request body dto.UpdateCurriculum true "Данные учебного плана"
+// @Success 200 {object} dto.Curriculum
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /curriculums/{id} [patch]
 func (controller *CurriculumController) Update(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -108,6 +153,18 @@ func (controller *CurriculumController) Update(ctx *gin.Context) {
 }
 
 // Delete обрабатывает удаление учебного плана.
+// @Summary Удалить учебный план
+// @Tags curriculums
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор учебного плана"
+// @Success 204
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /curriculums/{id} [delete]
 func (controller *CurriculumController) Delete(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {

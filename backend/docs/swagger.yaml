@@ -1,0 +1,2077 @@
+components:
+  schemas:
+    dto.CreateCurriculum:
+      properties:
+        group_id:
+          type: string
+        hours:
+          minimum: 1
+          type: integer
+        lead_by:
+          type: string
+        report_type:
+          $ref: '#/components/schemas/repositories.CurriculumReportType'
+        semester:
+          maximum: 12
+          minimum: 1
+          type: integer
+        subject_id:
+          type: string
+      required:
+      - group_id
+      - hours
+      - lead_by
+      - report_type
+      - semester
+      - subject_id
+      type: object
+    dto.CreateGrade:
+      properties:
+        comment:
+          maxLength: 255
+          type: string
+        curriculum_id:
+          type: string
+        student_id:
+          type: string
+        value:
+          type: integer
+      required:
+      - curriculum_id
+      - student_id
+      - value
+      type: object
+    dto.CreateGroup:
+      properties:
+        admission_year:
+          maximum: 2100
+          minimum: 1900
+          type: integer
+        name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        specialty_id:
+          type: string
+        study_form:
+          $ref: '#/components/schemas/repositories.StudyForm'
+      required:
+      - admission_year
+      - name
+      - specialty_id
+      - study_form
+      type: object
+    dto.CreateSpecialty:
+      properties:
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - title
+      type: object
+    dto.CreateStudent:
+      properties:
+        first_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        group_id:
+          type: string
+        last_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        middle_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        user_id:
+          type: string
+      required:
+      - first_name
+      - group_id
+      - last_name
+      - user_id
+      type: object
+    dto.CreateSubject:
+      properties:
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - title
+      type: object
+    dto.CreateUser:
+      properties:
+        email:
+          type: string
+        password:
+          minLength: 8
+          type: string
+        role:
+          $ref: '#/components/schemas/repositories.UserRole'
+      required:
+      - email
+      - password
+      - role
+      type: object
+    dto.Curriculum:
+      properties:
+        group_id:
+          type: string
+        hours:
+          type: integer
+        id:
+          type: string
+        lead_by:
+          type: string
+        report_type:
+          $ref: '#/components/schemas/repositories.CurriculumReportType'
+        semester:
+          type: integer
+        subject_id:
+          type: string
+      type: object
+    dto.Error:
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      type: object
+    dto.Grade:
+      properties:
+        author_id:
+          type: string
+        comment:
+          type: string
+        created_at:
+          type: string
+        curriculum_id:
+          type: string
+        id:
+          type: string
+        student_id:
+          type: string
+        updated_at:
+          type: string
+        value:
+          type: integer
+      type: object
+    dto.Group:
+      properties:
+        admission_year:
+          type: integer
+        created_at:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        specialty_id:
+          type: string
+        study_form:
+          $ref: '#/components/schemas/repositories.StudyForm'
+      type: object
+    dto.Login:
+      properties:
+        email:
+          type: string
+        password:
+          minLength: 8
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    dto.LoginResult:
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/dto.User'
+      type: object
+    dto.Specialty:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: string
+        title:
+          type: string
+      type: object
+    dto.Student:
+      properties:
+        created_at:
+          type: string
+        first_name:
+          type: string
+        group_id:
+          type: string
+        id:
+          type: string
+        last_name:
+          type: string
+        middle_name:
+          type: string
+        updated_at:
+          type: string
+        user_id:
+          type: string
+      type: object
+    dto.Subject:
+      properties:
+        created_at:
+          type: string
+        id:
+          type: string
+        title:
+          type: string
+      type: object
+    dto.UpdateCurriculum:
+      properties:
+        group_id:
+          type: string
+        hours:
+          minimum: 1
+          type: integer
+        lead_by:
+          type: string
+        report_type:
+          $ref: '#/components/schemas/repositories.CurriculumReportType'
+        semester:
+          maximum: 12
+          minimum: 1
+          type: integer
+        subject_id:
+          type: string
+      type: object
+    dto.UpdateGrade:
+      properties:
+        comment:
+          maxLength: 255
+          type: string
+        curriculum_id:
+          type: string
+        student_id:
+          type: string
+        value:
+          type: integer
+      type: object
+    dto.UpdateGroup:
+      properties:
+        admission_year:
+          maximum: 2100
+          minimum: 1900
+          type: integer
+        name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        specialty_id:
+          type: string
+        study_form:
+          $ref: '#/components/schemas/repositories.StudyForm'
+      type: object
+    dto.UpdateSpecialty:
+      properties:
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - title
+      type: object
+    dto.UpdateStudent:
+      properties:
+        first_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        group_id:
+          type: string
+        last_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        middle_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+      type: object
+    dto.UpdateSubject:
+      properties:
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+      - title
+      type: object
+    dto.UpdateUser:
+      properties:
+        email:
+          type: string
+        password:
+          minLength: 8
+          type: string
+        role:
+          $ref: '#/components/schemas/repositories.UserRole'
+      type: object
+    dto.User:
+      properties:
+        created_at:
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        role:
+          $ref: '#/components/schemas/repositories.UserRole'
+        updated_at:
+          type: string
+      type: object
+    repositories.CurriculumReportType:
+      enum:
+      - exam
+      - test
+      - diff_test
+      - exam
+      - test
+      - diff_test
+      - exam
+      - test
+      - diff_test
+      type: string
+      x-enum-varnames:
+      - CurriculumReportTypeExam
+      - CurriculumReportTypeTest
+      - CurriculumReportTypeDiffTest
+    repositories.StudyForm:
+      enum:
+      - full_time
+      - evening
+      - extramural
+      - full_time
+      - evening
+      - extramural
+      - full_time
+      - evening
+      - extramural
+      type: string
+      x-enum-varnames:
+      - StudyFormFullTime
+      - StudyFormEvening
+      - StudyFormExtramural
+    repositories.UserRole:
+      enum:
+      - administrator
+      - teacher
+      - student
+      - administrator
+      - teacher
+      - student
+      - administrator
+      - teacher
+      - student
+      type: string
+      x-enum-varnames:
+      - UserRoleAdministrator
+      - UserRoleTeacher
+      - UserRoleStudent
+  securitySchemes:
+    BearerAuth:
+      in: header
+      name: Authorization
+      type: apiKey
+externalDocs:
+  description: ""
+  url: ""
+info:
+  description: REST API образовательной системы Edutrack.
+  title: Edutrack API
+  version: "1.0"
+openapi: 3.1.0
+paths:
+  /auth/login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.Login'
+                description: Учётные данные
+                summary: request
+        description: Учётные данные
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.LoginResult'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      summary: Вход в аккаунт
+      tags:
+      - auth
+  /curriculums:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/dto.Curriculum'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить список учебных планов
+      tags:
+      - curriculums
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateCurriculum'
+                description: Данные учебного плана
+                summary: request
+        description: Данные учебного плана
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Curriculum'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать учебный план
+      tags:
+      - curriculums
+  /curriculums/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор учебного плана
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить учебный план
+      tags:
+      - curriculums
+    get:
+      parameters:
+      - description: Идентификатор учебного плана
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Curriculum'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить учебный план по идентификатору
+      tags:
+      - curriculums
+    patch:
+      parameters:
+      - description: Идентификатор учебного плана
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateCurriculum'
+                description: Данные учебного плана
+                summary: request
+        description: Данные учебного плана
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Curriculum'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Частично обновить учебный план
+      tags:
+      - curriculums
+  /grades:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/dto.Grade'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить список оценок
+      tags:
+      - grades
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateGrade'
+                description: Данные оценки
+                summary: request
+        description: Данные оценки
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Grade'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать оценку
+      tags:
+      - grades
+  /grades/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор оценки
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить оценку
+      tags:
+      - grades
+    get:
+      parameters:
+      - description: Идентификатор оценки
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Grade'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить оценку по идентификатору
+      tags:
+      - grades
+    patch:
+      parameters:
+      - description: Идентификатор оценки
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateGrade'
+                description: Данные оценки
+                summary: request
+        description: Данные оценки
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Grade'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Частично обновить оценку
+      tags:
+      - grades
+  /groups:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/dto.Group'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить список групп
+      tags:
+      - groups
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateGroup'
+                description: Данные группы
+                summary: request
+        description: Данные группы
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Group'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать группу
+      tags:
+      - groups
+  /groups/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор группы
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить группу
+      tags:
+      - groups
+    get:
+      parameters:
+      - description: Идентификатор группы
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Group'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить группу по идентификатору
+      tags:
+      - groups
+    patch:
+      parameters:
+      - description: Идентификатор группы
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateGroup'
+                description: Данные группы
+                summary: request
+        description: Данные группы
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Group'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Частично обновить группу
+      tags:
+      - groups
+  /specialties:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/dto.Specialty'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить список специальностей
+      tags:
+      - specialties
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateSpecialty'
+                description: Данные специальности
+                summary: request
+        description: Данные специальности
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Specialty'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать специальность
+      tags:
+      - specialties
+  /specialties/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор специальности
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить специальность
+      tags:
+      - specialties
+    get:
+      parameters:
+      - description: Идентификатор специальности
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Specialty'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить специальность по идентификатору
+      tags:
+      - specialties
+    patch:
+      parameters:
+      - description: Идентификатор специальности
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateSpecialty'
+                description: Данные специальности
+                summary: request
+        description: Данные специальности
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Specialty'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Обновить специальность
+      tags:
+      - specialties
+  /students:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/dto.Student'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить список студентов
+      tags:
+      - students
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateStudent'
+                description: Данные студента
+                summary: request
+        description: Данные студента
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Student'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать студента
+      tags:
+      - students
+  /students/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор студента
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить студента
+      tags:
+      - students
+    get:
+      parameters:
+      - description: Идентификатор студента
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Student'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить студента по идентификатору
+      tags:
+      - students
+    patch:
+      parameters:
+      - description: Идентификатор студента
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateStudent'
+                description: Данные студента
+                summary: request
+        description: Данные студента
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Student'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Частично обновить студента
+      tags:
+      - students
+  /students/me:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Student'
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить профиль текущего студента
+      tags:
+      - students
+  /subjects:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/dto.Subject'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить список предметов
+      tags:
+      - subjects
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateSubject'
+                description: Данные предмета
+                summary: request
+        description: Данные предмета
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Subject'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать предмет
+      tags:
+      - subjects
+  /subjects/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор предмета
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить предмет
+      tags:
+      - subjects
+    get:
+      parameters:
+      - description: Идентификатор предмета
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Subject'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить предмет по идентификатору
+      tags:
+      - subjects
+    patch:
+      parameters:
+      - description: Идентификатор предмета
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateSubject'
+                description: Данные предмета
+                summary: request
+        description: Данные предмета
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Subject'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Обновить предмет
+      tags:
+      - subjects
+  /users:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.CreateUser'
+                description: Данные пользователя
+                summary: request
+        description: Данные пользователя
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.User'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Создать пользователя
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: Идентификатор пользователя
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Удалить пользователя
+      tags:
+      - users
+    get:
+      parameters:
+      - description: Идентификатор пользователя
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.User'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Получить пользователя по идентификатору
+      tags:
+      - users
+    patch:
+      parameters:
+      - description: Идентификатор пользователя
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+              - $ref: '#/components/schemas/dto.UpdateUser'
+                description: Данные пользователя
+                summary: request
+        description: Данные пользователя
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.User'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Not Found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dto.Error'
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Частично обновить пользователя
+      tags:
+      - users
+servers:
+- url: /api

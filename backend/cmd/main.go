@@ -8,6 +8,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// @title Edutrack API
+// @version 1.0
+// @description REST API образовательной системы Edutrack.
+// @servers.url /api
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()

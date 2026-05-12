@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
 
+	"github.com/Pelfox/edutrack/backend/docs"
 	"github.com/Pelfox/edutrack/backend/internal/config"
 	"github.com/Pelfox/edutrack/backend/internal/controllers"
 	"github.com/Pelfox/edutrack/backend/internal/database"
@@ -11,6 +13,7 @@ import (
 	"github.com/Pelfox/edutrack/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 // StartApp запускает приложение, настраивая корректный роутинг между компонентами приложения.
@@ -56,6 +59,13 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	subjectController.RegisterRoutes(authorized.Group("/subjects"))
 	curriculumController.RegisterRoutes(authorized.Group("/curriculums"))
 	gradeController.RegisterRoutes(authorized.Group("/grades"))
+	router.GET("/openapi.json", func(ctx *gin.Context) {
+		ctx.Data(http.StatusOK, "application/json; charset=utf-8", []byte(docs.SwaggerInfo.ReadDoc()))
+	})
+	router.GET("/swagger/*any", gin.WrapH(httpSwagger.Handler(
+		httpSwagger.URL("/openapi.json"),
+		httpSwagger.PersistAuthorization(true),
+	)))
 
 	// Запускаем HTTP-сервер и ожидаем новые подключения.
 	if err := router.Run(appConfig.ListenAddr); err != nil {

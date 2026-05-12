@@ -28,6 +28,18 @@ func (controller *GradeController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // Create обрабатывает создание оценки.
+// @Summary Создать оценку
+// @Tags grades
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateGrade true "Данные оценки"
+// @Success 201 {object} dto.Grade
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /grades [post]
 func (controller *GradeController) Create(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -51,6 +63,14 @@ func (controller *GradeController) Create(ctx *gin.Context) {
 }
 
 // List обрабатывает получение списка оценок.
+// @Summary Получить список оценок
+// @Tags grades
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.Grade
+// @Failure 401 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /grades [get]
 func (controller *GradeController) List(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -68,6 +88,18 @@ func (controller *GradeController) List(ctx *gin.Context) {
 }
 
 // GetByID обрабатывает получение оценки по идентификатору.
+// @Summary Получить оценку по идентификатору
+// @Tags grades
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор оценки"
+// @Success 200 {object} dto.Grade
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /grades/{id} [get]
 func (controller *GradeController) GetByID(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -85,6 +117,20 @@ func (controller *GradeController) GetByID(ctx *gin.Context) {
 }
 
 // Update обрабатывает частичное обновление оценки.
+// @Summary Частично обновить оценку
+// @Tags grades
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор оценки"
+// @Param request body dto.UpdateGrade true "Данные оценки"
+// @Success 200 {object} dto.Grade
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /grades/{id} [patch]
 func (controller *GradeController) Update(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {
@@ -108,6 +154,18 @@ func (controller *GradeController) Update(ctx *gin.Context) {
 }
 
 // Delete обрабатывает удаление оценки.
+// @Summary Удалить оценку
+// @Tags grades
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Идентификатор оценки"
+// @Success 204
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 403 {object} dto.Error
+// @Failure 404 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /grades/{id} [delete]
 func (controller *GradeController) Delete(ctx *gin.Context) {
 	actor, ok := actorFromContext(ctx)
 	if !ok {

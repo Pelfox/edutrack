@@ -24,6 +24,16 @@ func (controller *AuthController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // Login обрабатывает вход пользователя в аккаунт.
+// @Summary Вход в аккаунт
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.Login true "Учётные данные"
+// @Success 200 {object} dto.LoginResult
+// @Failure 400 {object} dto.Error
+// @Failure 401 {object} dto.Error
+// @Failure 500 {object} dto.Error
+// @Router /auth/login [post]
 func (controller *AuthController) Login(ctx *gin.Context) {
 	var request dto.Login
 	if err := ctx.ShouldBindJSON(&request); err != nil {
