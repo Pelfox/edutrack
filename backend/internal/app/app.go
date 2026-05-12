@@ -5,7 +5,10 @@ import (
 	"fmt"
 
 	"github.com/Pelfox/edutrack/backend/internal/config"
+	"github.com/Pelfox/edutrack/backend/internal/controllers"
 	"github.com/Pelfox/edutrack/backend/internal/database"
+	"github.com/Pelfox/edutrack/backend/internal/repositories"
+	"github.com/Pelfox/edutrack/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )
@@ -19,6 +22,15 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	defer db.Close()
 
 	router := gin.Default()
+	userRepository := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepository)
+	authService := services.NewAuthService(userRepository, appConfig.JWTSecret)
+	userController := controllers.NewUserController(userService)
+	authController := controllers.NewAuthController(authService)
+
+	api := router.Group("/api")
+	authController.RegisterRoutes(api.Group("/auth"))
+	userController.RegisterRoutes(api.Group("/users", controllers.AuthMiddleware(authService)))
 
 	// Запускаем HTTP-сервер и ожидаем новые подключения.
 	if err := router.Run(appConfig.ListenAddr); err != nil {

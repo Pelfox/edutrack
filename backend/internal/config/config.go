@@ -19,6 +19,8 @@ type AppConfig struct {
 	ListenAddr string `koanf:"listen_addr"`
 	// DatabaseURL - строка подключения к PostgreSQL.
 	DatabaseURL string `koanf:"database_url"`
+	// JWTSecret - секретный ключ для подписи JWT-токенов.
+	JWTSecret string `koanf:"jwt_secret"`
 }
 
 // LoadConfig загружает все значения для конфигурации из .env-файла или переменных окружения.
