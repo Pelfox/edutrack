@@ -33,7 +33,6 @@ type UsersService interface {
 type usersService struct {
 	users     repositories.UserRepository
 	validator *validator.Validate
-	now       func() time.Time
 }
 
 // NewUserService создаёт сервис пользовательского модуля.
@@ -41,7 +40,6 @@ func NewUserService(users repositories.UserRepository) UsersService {
 	return &usersService{
 		users:     users,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
-		now:       time.Now,
 	}
 }
 
@@ -59,7 +57,7 @@ func (service *usersService) Create(ctx context.Context, actor dto.Actor, input 
 		return nil, err
 	}
 
-	now := service.now().UTC()
+	now := time.Now().UTC()
 	user, err := service.users.Create(ctx, repositories.UserCreateData{
 		ID:           uuid.NewString(),
 		Email:        input.Email,
@@ -113,7 +111,7 @@ func (service *usersService) Update(ctx context.Context, actor dto.Actor, id str
 	}
 
 	data := repositories.UserUpdateData{
-		UpdatedAt: service.now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 	}
 
 	if input.Email != nil {

@@ -34,7 +34,6 @@ type SpecialtiesService interface {
 type specialtiesService struct {
 	specialties repositories.SpecialtyRepository
 	validator   *validator.Validate
-	now         func() time.Time
 }
 
 // NewSpecialtyService создаёт сервис специальностей.
@@ -42,7 +41,6 @@ func NewSpecialtyService(specialties repositories.SpecialtyRepository) Specialti
 	return &specialtiesService{
 		specialties: specialties,
 		validator:   validator.New(validator.WithRequiredStructEnabled()),
-		now:         time.Now,
 	}
 }
 
@@ -58,7 +56,7 @@ func (service *specialtiesService) Create(ctx context.Context, actor dto.Actor, 
 	specialty, err := service.specialties.Create(ctx, repositories.SpecialtyCreateData{
 		ID:        uuid.NewString(),
 		Title:     input.Title,
-		CreatedAt: service.now().UTC(),
+		CreatedAt: time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, err

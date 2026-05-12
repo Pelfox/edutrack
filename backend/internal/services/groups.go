@@ -32,7 +32,6 @@ type GroupsService interface {
 type groupsService struct {
 	groups    repositories.GroupRepository
 	validator *validator.Validate
-	now       func() time.Time
 }
 
 // NewGroupService создаёт сервис групп.
@@ -40,7 +39,6 @@ func NewGroupService(groups repositories.GroupRepository) GroupsService {
 	return &groupsService{
 		groups:    groups,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
-		now:       time.Now,
 	}
 }
 
@@ -59,7 +57,7 @@ func (service *groupsService) Create(ctx context.Context, actor dto.Actor, input
 		StudyForm:     input.StudyForm,
 		AdmissionYear: input.AdmissionYear,
 		SpecialtyID:   input.SpecialtyID,
-		CreatedAt:     service.now().UTC(),
+		CreatedAt:     time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, err

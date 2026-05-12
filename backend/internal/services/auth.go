@@ -28,7 +28,6 @@ type authService struct {
 	users     repositories.AuthRepository
 	jwtSecret string
 	validator *validator.Validate
-	now       func() time.Time
 }
 
 // Claims содержит пользовательские и стандартные поля JWT-токена.
@@ -44,7 +43,6 @@ func NewAuthService(users repositories.AuthRepository, jwtSecret string) AuthSer
 		users:     users,
 		jwtSecret: jwtSecret,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
-		now:       time.Now,
 	}
 }
 
@@ -82,7 +80,7 @@ func (service *authService) createToken(userID string, role repositories.UserRol
 		return "", ErrTokenSigningSecret
 	}
 
-	now := service.now().UTC()
+	now := time.Now().UTC()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		UserID: userID,
 		Role:   role,

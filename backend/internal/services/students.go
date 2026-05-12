@@ -35,7 +35,6 @@ type StudentsService interface {
 type studentsService struct {
 	students  repositories.StudentRepository
 	validator *validator.Validate
-	now       func() time.Time
 }
 
 // NewStudentService создаёт сервис студентов.
@@ -43,7 +42,6 @@ func NewStudentService(students repositories.StudentRepository) StudentsService 
 	return &studentsService{
 		students:  students,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
-		now:       time.Now,
 	}
 }
 
@@ -58,7 +56,7 @@ func (service *studentsService) Create(ctx context.Context, actor dto.Actor, inp
 		return nil, err
 	}
 
-	now := service.now().UTC()
+	now := time.Now().UTC()
 	student, err := service.students.Create(ctx, repositories.StudentCreateData{
 		ID:         uuid.NewString(),
 		UserID:     input.UserID,
@@ -153,7 +151,7 @@ func (service *studentsService) Update(ctx context.Context, actor dto.Actor, id 
 		FirstName:     input.FirstName,
 		MiddleName:    input.MiddleName,
 		MiddleNameSet: middleNameSet,
-		UpdatedAt:     service.now().UTC(),
+		UpdatedAt:     time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, mapDirectoryRepositoryError(err)

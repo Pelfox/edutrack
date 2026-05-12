@@ -33,7 +33,6 @@ type gradesService struct {
 	grades    repositories.GradeRepository
 	students  repositories.StudentRepository
 	validator *validator.Validate
-	now       func() time.Time
 }
 
 // NewGradeService создаёт сервис оценок.
@@ -42,7 +41,6 @@ func NewGradeService(grades repositories.GradeRepository, students repositories.
 		grades:    grades,
 		students:  students,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
-		now:       time.Now,
 	}
 }
 
@@ -55,7 +53,7 @@ func (service *gradesService) Create(ctx context.Context, actor dto.Actor, input
 		return nil, err
 	}
 
-	now := service.now().UTC()
+	now := time.Now().UTC()
 	grade, err := service.grades.Create(ctx, repositories.GradeCreateData{
 		ID:           uuid.NewString(),
 		CurriculumID: input.CurriculumID,
@@ -144,7 +142,7 @@ func (service *gradesService) Update(ctx context.Context, actor dto.Actor, id st
 		Value:        input.Value,
 		Comment:      input.Comment,
 		CommentSet:   commentSet,
-		UpdatedAt:    service.now().UTC(),
+		UpdatedAt:    time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, mapDirectoryRepositoryError(err)

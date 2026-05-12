@@ -31,7 +31,6 @@ type SubjectsService interface {
 type subjectsService struct {
 	subjects  repositories.SubjectRepository
 	validator *validator.Validate
-	now       func() time.Time
 }
 
 // NewSubjectService создаёт сервис предметов.
@@ -39,7 +38,6 @@ func NewSubjectService(subjects repositories.SubjectRepository) SubjectsService 
 	return &subjectsService{
 		subjects:  subjects,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
-		now:       time.Now,
 	}
 }
 
@@ -55,7 +53,7 @@ func (service *subjectsService) Create(ctx context.Context, actor dto.Actor, inp
 	subject, err := service.subjects.Create(ctx, repositories.SubjectCreateData{
 		ID:        uuid.NewString(),
 		Title:     input.Title,
-		CreatedAt: service.now().UTC(),
+		CreatedAt: time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, err
