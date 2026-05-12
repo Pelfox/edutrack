@@ -25,14 +25,17 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	userRepository := repositories.NewUserRepository(db)
 	specialtyRepository := repositories.NewSpecialtyRepository(db)
 	groupRepository := repositories.NewGroupRepository(db)
+	studentRepository := repositories.NewStudentRepository(db)
 	userService := services.NewUserService(userRepository)
 	authService := services.NewAuthService(userRepository, appConfig.JWTSecret)
 	specialtyService := services.NewSpecialtyService(specialtyRepository)
 	groupService := services.NewGroupService(groupRepository)
+	studentService := services.NewStudentService(studentRepository)
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService)
 	specialtyController := controllers.NewSpecialtyController(specialtyService)
 	groupController := controllers.NewGroupController(groupService)
+	studentController := controllers.NewStudentController(studentService)
 
 	api := router.Group("/api")
 	authController.RegisterRoutes(api.Group("/auth"))
@@ -40,6 +43,7 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	userController.RegisterRoutes(authorized.Group("/users"))
 	specialtyController.RegisterRoutes(authorized.Group("/specialties"))
 	groupController.RegisterRoutes(authorized.Group("/groups"))
+	studentController.RegisterRoutes(authorized.Group("/students"))
 
 	// Запускаем HTTP-сервер и ожидаем новые подключения.
 	if err := router.Run(appConfig.ListenAddr); err != nil {
