@@ -1,16 +1,18 @@
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import type { components } from "@/api";
 import { apiClient, clearAuthToken, getAuthToken, setAuthToken } from "@/api";
 
 export type AuthUser = components["schemas"]["dto.User"];
+export type AuthProfile = components["schemas"]["dto.Profile"];
 export type LoginCredentials = components["schemas"]["dto.Login"];
 
 export type AuthContextValue = {
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<AuthUser | null>;
   logout: () => void;
+  profile: AuthProfile | null;
   user: AuthUser | null;
 };
 
@@ -18,44 +20,71 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => getInitialAuthUser());
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    const { data, error } = await apiClient.POST("/auth/login", {
-      body: credentials,
-    });
+  const loadProfile = useCallback(async () => {
+    const { data, error } = await apiClient.GET("/profile/me");
 
     if (error) {
-      throw new Error(getAuthErrorMessage(error));
+      setProfile(null);
+      return null;
     }
 
-    if (!data?.token) {
-      throw new Error("Сервер не вернул токен авторизации.");
-    }
-
-    const authenticatedUser = data.user ?? getAuthUserFromToken(data.token);
-    if (!authenticatedUser?.role) {
-      throw new Error("Сервер не вернул роль пользователя.");
-    }
-
-    setAuthToken(data.token);
-    setUser(authenticatedUser);
-
-    return authenticatedUser;
+    setProfile(data ?? null);
+    return data ?? null;
   }, []);
+
+  const login = useCallback(
+    async (credentials: LoginCredentials) => {
+      const { data, error } = await apiClient.POST("/auth/login", {
+        body: credentials,
+      });
+
+      if (error) {
+        throw new Error(getAuthErrorMessage(error));
+      }
+
+      if (!data?.token) {
+        throw new Error("Сервер не вернул токен авторизации.");
+      }
+
+      const authenticatedUser = data.user ?? getAuthUserFromToken(data.token);
+      if (!authenticatedUser?.role) {
+        throw new Error("Сервер не вернул роль пользователя.");
+      }
+
+      setAuthToken(data.token);
+      setUser(authenticatedUser);
+      await loadProfile();
+
+      return authenticatedUser;
+    },
+    [loadProfile],
+  );
 
   const logout = useCallback(() => {
     clearAuthToken();
+    setProfile(null);
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    if (!user || profile) {
+      return;
+    }
+
+    void loadProfile();
+  }, [loadProfile, profile, user]);
 
   const value = useMemo(
     () => ({
       isAuthenticated: user !== null,
       login,
       logout,
+      profile,
       user,
     }),
-    [login, logout, user],
+    [login, logout, profile, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

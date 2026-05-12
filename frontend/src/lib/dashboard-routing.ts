@@ -7,7 +7,11 @@ import type { AuthUser } from "@/lib/context/auth";
 export type DashboardPage =
   | "home"
   | "students"
+  | "teachers"
+  | "groups"
+  | "specialties"
   | "disciplines"
+  | "curriculums"
   | "analytics"
   | "grades"
   | "schedule";
@@ -26,14 +30,30 @@ export function isDashboardPageAvailable(role: DashboardRole | undefined, page: 
   }
 
   if (role === "administrator") {
-    return page === "students" || page === "disciplines" || page === "analytics";
+    return (
+      page === "students" ||
+      page === "teachers" ||
+      page === "groups" ||
+      page === "specialties" ||
+      page === "disciplines" ||
+      page === "curriculums" ||
+      page === "analytics"
+    );
   }
 
   return page === "disciplines" || page === "grades" || page === "schedule";
 }
 
 export function getAdministratorPage(page: DashboardPage): AdministratorPage {
-  if (page === "students" || page === "disciplines" || page === "analytics") {
+  if (
+    page === "students" ||
+    page === "teachers" ||
+    page === "groups" ||
+    page === "specialties" ||
+    page === "disciplines" ||
+    page === "curriculums" ||
+    page === "analytics"
+  ) {
     return page;
   }
 

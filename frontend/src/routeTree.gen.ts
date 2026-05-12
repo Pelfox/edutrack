@@ -10,10 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as dashboardIndexRouteImport } from './routes/(dashboard)/index'
+import { Route as dashboardTeachersRouteImport } from './routes/(dashboard)/teachers'
 import { Route as dashboardStudentsRouteImport } from './routes/(dashboard)/students'
+import { Route as dashboardSpecialtiesRouteImport } from './routes/(dashboard)/specialties'
 import { Route as dashboardScheduleRouteImport } from './routes/(dashboard)/schedule'
+import { Route as dashboardGroupsRouteImport } from './routes/(dashboard)/groups'
 import { Route as dashboardGradesRouteImport } from './routes/(dashboard)/grades'
 import { Route as dashboardDisciplinesRouteImport } from './routes/(dashboard)/disciplines'
+import { Route as dashboardCurriculumsRouteImport } from './routes/(dashboard)/curriculums'
 import { Route as dashboardAnalyticsRouteImport } from './routes/(dashboard)/analytics'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 
@@ -22,14 +26,29 @@ const dashboardIndexRoute = dashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const dashboardTeachersRoute = dashboardTeachersRouteImport.update({
+  id: '/(dashboard)/teachers',
+  path: '/teachers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const dashboardStudentsRoute = dashboardStudentsRouteImport.update({
   id: '/(dashboard)/students',
   path: '/students',
   getParentRoute: () => rootRouteImport,
 } as any)
+const dashboardSpecialtiesRoute = dashboardSpecialtiesRouteImport.update({
+  id: '/(dashboard)/specialties',
+  path: '/specialties',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const dashboardScheduleRoute = dashboardScheduleRouteImport.update({
   id: '/(dashboard)/schedule',
   path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const dashboardGroupsRoute = dashboardGroupsRouteImport.update({
+  id: '/(dashboard)/groups',
+  path: '/groups',
   getParentRoute: () => rootRouteImport,
 } as any)
 const dashboardGradesRoute = dashboardGradesRouteImport.update({
@@ -40,6 +59,11 @@ const dashboardGradesRoute = dashboardGradesRouteImport.update({
 const dashboardDisciplinesRoute = dashboardDisciplinesRouteImport.update({
   id: '/(dashboard)/disciplines',
   path: '/disciplines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const dashboardCurriculumsRoute = dashboardCurriculumsRouteImport.update({
+  id: '/(dashboard)/curriculums',
+  path: '/curriculums',
   getParentRoute: () => rootRouteImport,
 } as any)
 const dashboardAnalyticsRoute = dashboardAnalyticsRouteImport.update({
@@ -56,29 +80,41 @@ const authLoginRoute = authLoginRouteImport.update({
 export interface FileRoutesByFullPath {
   '/login': typeof authLoginRoute
   '/analytics': typeof dashboardAnalyticsRoute
+  '/curriculums': typeof dashboardCurriculumsRoute
   '/disciplines': typeof dashboardDisciplinesRoute
   '/grades': typeof dashboardGradesRoute
+  '/groups': typeof dashboardGroupsRoute
   '/schedule': typeof dashboardScheduleRoute
+  '/specialties': typeof dashboardSpecialtiesRoute
   '/students': typeof dashboardStudentsRoute
+  '/teachers': typeof dashboardTeachersRoute
   '/': typeof dashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/analytics': typeof dashboardAnalyticsRoute
+  '/curriculums': typeof dashboardCurriculumsRoute
   '/disciplines': typeof dashboardDisciplinesRoute
   '/grades': typeof dashboardGradesRoute
+  '/groups': typeof dashboardGroupsRoute
   '/schedule': typeof dashboardScheduleRoute
+  '/specialties': typeof dashboardSpecialtiesRoute
   '/students': typeof dashboardStudentsRoute
+  '/teachers': typeof dashboardTeachersRoute
   '/': typeof dashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(auth)/login': typeof authLoginRoute
   '/(dashboard)/analytics': typeof dashboardAnalyticsRoute
+  '/(dashboard)/curriculums': typeof dashboardCurriculumsRoute
   '/(dashboard)/disciplines': typeof dashboardDisciplinesRoute
   '/(dashboard)/grades': typeof dashboardGradesRoute
+  '/(dashboard)/groups': typeof dashboardGroupsRoute
   '/(dashboard)/schedule': typeof dashboardScheduleRoute
+  '/(dashboard)/specialties': typeof dashboardSpecialtiesRoute
   '/(dashboard)/students': typeof dashboardStudentsRoute
+  '/(dashboard)/teachers': typeof dashboardTeachersRoute
   '/(dashboard)/': typeof dashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -86,38 +122,54 @@ export interface FileRouteTypes {
   fullPaths:
     | '/login'
     | '/analytics'
+    | '/curriculums'
     | '/disciplines'
     | '/grades'
+    | '/groups'
     | '/schedule'
+    | '/specialties'
     | '/students'
+    | '/teachers'
     | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/analytics'
+    | '/curriculums'
     | '/disciplines'
     | '/grades'
+    | '/groups'
     | '/schedule'
+    | '/specialties'
     | '/students'
+    | '/teachers'
     | '/'
   id:
     | '__root__'
     | '/(auth)/login'
     | '/(dashboard)/analytics'
+    | '/(dashboard)/curriculums'
     | '/(dashboard)/disciplines'
     | '/(dashboard)/grades'
+    | '/(dashboard)/groups'
     | '/(dashboard)/schedule'
+    | '/(dashboard)/specialties'
     | '/(dashboard)/students'
+    | '/(dashboard)/teachers'
     | '/(dashboard)/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   authLoginRoute: typeof authLoginRoute
   dashboardAnalyticsRoute: typeof dashboardAnalyticsRoute
+  dashboardCurriculumsRoute: typeof dashboardCurriculumsRoute
   dashboardDisciplinesRoute: typeof dashboardDisciplinesRoute
   dashboardGradesRoute: typeof dashboardGradesRoute
+  dashboardGroupsRoute: typeof dashboardGroupsRoute
   dashboardScheduleRoute: typeof dashboardScheduleRoute
+  dashboardSpecialtiesRoute: typeof dashboardSpecialtiesRoute
   dashboardStudentsRoute: typeof dashboardStudentsRoute
+  dashboardTeachersRoute: typeof dashboardTeachersRoute
   dashboardIndexRoute: typeof dashboardIndexRoute
 }
 
@@ -130,6 +182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof dashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(dashboard)/teachers': {
+      id: '/(dashboard)/teachers'
+      path: '/teachers'
+      fullPath: '/teachers'
+      preLoaderRoute: typeof dashboardTeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(dashboard)/students': {
       id: '/(dashboard)/students'
       path: '/students'
@@ -137,11 +196,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof dashboardStudentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(dashboard)/specialties': {
+      id: '/(dashboard)/specialties'
+      path: '/specialties'
+      fullPath: '/specialties'
+      preLoaderRoute: typeof dashboardSpecialtiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(dashboard)/schedule': {
       id: '/(dashboard)/schedule'
       path: '/schedule'
       fullPath: '/schedule'
       preLoaderRoute: typeof dashboardScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(dashboard)/groups': {
+      id: '/(dashboard)/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof dashboardGroupsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(dashboard)/grades': {
@@ -156,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/disciplines'
       fullPath: '/disciplines'
       preLoaderRoute: typeof dashboardDisciplinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(dashboard)/curriculums': {
+      id: '/(dashboard)/curriculums'
+      path: '/curriculums'
+      fullPath: '/curriculums'
+      preLoaderRoute: typeof dashboardCurriculumsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(dashboard)/analytics': {
@@ -178,10 +258,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   authLoginRoute: authLoginRoute,
   dashboardAnalyticsRoute: dashboardAnalyticsRoute,
+  dashboardCurriculumsRoute: dashboardCurriculumsRoute,
   dashboardDisciplinesRoute: dashboardDisciplinesRoute,
   dashboardGradesRoute: dashboardGradesRoute,
+  dashboardGroupsRoute: dashboardGroupsRoute,
   dashboardScheduleRoute: dashboardScheduleRoute,
+  dashboardSpecialtiesRoute: dashboardSpecialtiesRoute,
   dashboardStudentsRoute: dashboardStudentsRoute,
+  dashboardTeachersRoute: dashboardTeachersRoute,
   dashboardIndexRoute: dashboardIndexRoute,
 }
 export const routeTree = rootRouteImport

@@ -55,7 +55,7 @@ const authMiddleware: Middleware = {
 };
 
 export const apiClient = createClient<paths>({
-  baseUrl: getApiBaseUrl(),
+  baseUrl: `${getApiBaseUrl()}/api`,
   credentials: "include",
 });
 

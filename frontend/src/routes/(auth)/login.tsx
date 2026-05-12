@@ -150,8 +150,24 @@ function getDashboardPageByPath(path: string): DashboardPage | null {
     return "students";
   }
 
+  if (pathname === "/teachers") {
+    return "teachers";
+  }
+
+  if (pathname === "/groups") {
+    return "groups";
+  }
+
+  if (pathname === "/specialties") {
+    return "specialties";
+  }
+
   if (pathname === "/disciplines") {
     return "disciplines";
+  }
+
+  if (pathname === "/curriculums") {
+    return "curriculums";
   }
 
   if (pathname === "/analytics") {

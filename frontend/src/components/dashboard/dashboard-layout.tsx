@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Menu, Search } from "lucide-react";
+import { LogOut, Menu, Search } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -38,6 +38,7 @@ export type DashboardUser = {
 
 export type DashboardConfig = {
   navItems: DashboardNavItem[];
+  onLogout?: (() => void) | undefined;
   searchPlaceholder: string;
   user: DashboardUser;
 };
@@ -98,7 +99,7 @@ function DashboardSidebar({ config }: { config: DashboardConfig }) {
       <SidebarSeparator className="mx-0 w-[255px] bg-sidebar-border" />
 
       <SidebarFooter className="h-[81px] w-[255px] px-3 pb-0 pt-[13px]">
-        <UserSummary user={config.user} />
+        <UserSummary onLogout={config.onLogout} user={config.user} />
       </SidebarFooter>
     </Sidebar>
   );
@@ -136,7 +137,13 @@ function DashboardSidebarItem({ item }: { item: DashboardNavItem }) {
   );
 }
 
-function UserSummary({ user }: { user: DashboardUser }) {
+function UserSummary({
+  onLogout,
+  user,
+}: {
+  onLogout: (() => void) | undefined;
+  user: DashboardUser;
+}) {
   return (
     <div className="relative h-14 w-full">
       <Avatar className="absolute left-3 top-3" size="default">
@@ -144,7 +151,7 @@ function UserSummary({ user }: { user: DashboardUser }) {
           {user.initials}
         </AvatarFallback>
       </Avatar>
-      <div className="absolute left-14 top-2.5 flex h-9 w-[163px] flex-col items-start">
+      <div className="absolute left-14 top-2.5 flex h-9 w-[136px] flex-col items-start">
         <div
           className={
             user.nameWeight === "bold"
@@ -158,6 +165,18 @@ function UserSummary({ user }: { user: DashboardUser }) {
           {user.detail}
         </div>
       </div>
+      {onLogout !== undefined && (
+        <Button
+          aria-label="Выйти из аккаунта"
+          className="absolute right-1 top-3 size-8 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          onClick={onLogout}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          <LogOut className="size-4" strokeWidth={2} />
+        </Button>
+      )}
     </div>
   );
 }
