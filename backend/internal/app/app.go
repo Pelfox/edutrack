@@ -25,10 +25,13 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	defer db.Close()
 
 	router := gin.Default()
+	router.Use(corsMiddleware())
+
 	userRepository := repositories.NewUserRepository(db)
 	specialtyRepository := repositories.NewSpecialtyRepository(db)
 	groupRepository := repositories.NewGroupRepository(db)
 	studentRepository := repositories.NewStudentRepository(db)
+	profileRepository := repositories.NewProfileRepository(db)
 	subjectRepository := repositories.NewSubjectRepository(db)
 	curriculumRepository := repositories.NewCurriculumRepository(db)
 	gradeRepository := repositories.NewGradeRepository(db)
@@ -37,6 +40,7 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	specialtyService := services.NewSpecialtyService(specialtyRepository)
 	groupService := services.NewGroupService(groupRepository)
 	studentService := services.NewStudentService(studentRepository)
+	profileService := services.NewProfileService(profileRepository)
 	subjectService := services.NewSubjectService(subjectRepository)
 	curriculumService := services.NewCurriculumService(curriculumRepository)
 	gradeService := services.NewGradeService(gradeRepository, studentRepository)
@@ -45,6 +49,7 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	specialtyController := controllers.NewSpecialtyController(specialtyService)
 	groupController := controllers.NewGroupController(groupService)
 	studentController := controllers.NewStudentController(studentService)
+	profileController := controllers.NewProfileController(profileService)
 	subjectController := controllers.NewSubjectController(subjectService)
 	curriculumController := controllers.NewCurriculumController(curriculumService)
 	gradeController := controllers.NewGradeController(gradeService)
@@ -56,6 +61,7 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	specialtyController.RegisterRoutes(authorized.Group("/specialties"))
 	groupController.RegisterRoutes(authorized.Group("/groups"))
 	studentController.RegisterRoutes(authorized.Group("/students"))
+	profileController.RegisterRoutes(authorized.Group("/profile"))
 	subjectController.RegisterRoutes(authorized.Group("/subjects"))
 	curriculumController.RegisterRoutes(authorized.Group("/curriculums"))
 	gradeController.RegisterRoutes(authorized.Group("/grades"))
@@ -73,4 +79,29 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	}
 
 	return nil
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	allowedOrigins := map[string]struct{}{
+		"http://localhost:3000": {},
+		"http://127.0.0.1:3000": {},
+	}
+
+	return func(ctx *gin.Context) {
+		origin := ctx.GetHeader("Origin")
+		if _, ok := allowedOrigins[origin]; ok {
+			ctx.Header("Access-Control-Allow-Origin", origin)
+			ctx.Header("Access-Control-Allow-Credentials", "true")
+			ctx.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			ctx.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			ctx.Header("Vary", "Origin")
+		}
+
+		if ctx.Request.Method == http.MethodOptions {
+			ctx.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		ctx.Next()
+	}
 }

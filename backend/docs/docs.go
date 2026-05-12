@@ -286,6 +286,32 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
+            "dto.Profile": {
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "middle_name": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/repositories.UserRole"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "dto.Specialty": {
                 "properties": {
                     "created_at": {
@@ -1809,6 +1835,61 @@ const docTemplate = `{
                 "summary": "Частично обновить группу",
                 "tags": [
                     "groups"
+                ]
+            }
+        },
+        "/profile/me": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/dto.Profile"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/dto.Error"
+                                }
+                            }
+                        },
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/dto.Error"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/dto.Error"
+                                }
+                            }
+                        },
+                        "description": "Internal Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Получить профиль текущего пользователя",
+                "tags": [
+                    "profile"
                 ]
             }
         },
