@@ -11,10 +11,31 @@ import (
 
 func respondError(ctx *gin.Context, err error) {
 	status, code, message := mapError(err)
+	logError(ctx, err, status, code)
 	ctx.JSON(status, dto.Error{
 		Error:   code,
 		Message: message,
 	})
+}
+
+func logError(ctx *gin.Context, err error, status int, code string) {
+	logger := loggerFromContext(ctx)
+	event := logger.Warn().Err(err)
+	if status >= http.StatusInternalServerError {
+		event = logger.Error().Err(err)
+	}
+
+	if actor, ok := actorFromContext(ctx); ok {
+		event = event.
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role))
+	}
+
+	event.
+		Int("status", status).
+		Str("error_code", code).
+		Str("route", requestRoute(ctx)).
+		Msg("request failed")
 }
 
 func mapError(err error) (int, string, string) {

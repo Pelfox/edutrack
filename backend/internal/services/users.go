@@ -12,6 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,22 +34,29 @@ type UsersService interface {
 type usersService struct {
 	users     repositories.UserRepository
 	validator *validator.Validate
+	logger    zerolog.Logger
 }
 
 // NewUserService создаёт сервис пользовательского модуля.
-func NewUserService(users repositories.UserRepository) UsersService {
+func NewUserService(users repositories.UserRepository, logger zerolog.Logger) UsersService {
 	return &usersService{
 		users:     users,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
+		logger:    logger,
 	}
 }
 
 func (service *usersService) Create(ctx context.Context, actor dto.Actor, input dto.CreateUser) (*dto.User, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Msg("user creation denied")
 		return nil, ErrForbidden
 	}
 	input.Email = normalizeEmail(input.Email)
 	if err := validateStruct(service.validator, input); err != nil {
+		service.logger.Warn().Err(err).Str("email", input.Email).Msg("user creation validation failed")
 		return nil, err
 	}
 
@@ -67,8 +75,17 @@ func (service *usersService) Create(ctx context.Context, actor dto.Actor, input 
 		UpdatedAt:    now,
 	})
 	if err != nil {
-		return nil, mapUserRepositoryError(err)
+		mappedErr := mapUserRepositoryError(err)
+		logUserRepositoryError(service.logger, mappedErr, "user creation failed", input.Email)
+		return nil, mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("user_id", user.ID).
+		Str("email", user.Email).
+		Str("role", string(user.Role)).
+		Msg("user created")
 
 	return toUserOutput(user), nil
 }
@@ -78,6 +95,11 @@ func (service *usersService) GetByID(ctx context.Context, actor dto.Actor, id st
 		return nil, err
 	}
 	if actor.Role != repositories.UserRoleAdministrator && actor.ID != id {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Str("user_id", id).
+			Msg("user access denied")
 		return nil, ErrForbidden
 	}
 
@@ -94,9 +116,19 @@ func (service *usersService) Update(ctx context.Context, actor dto.Actor, id str
 		return nil, err
 	}
 	if actor.Role != repositories.UserRoleAdministrator && actor.ID != id {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Str("user_id", id).
+			Msg("user update denied")
 		return nil, ErrForbidden
 	}
 	if input.Role != nil && actor.Role != repositories.UserRoleAdministrator {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Str("user_id", id).
+			Msg("user role update denied")
 		return nil, ErrForbidden
 	}
 	if input.Email == nil && input.Password == nil && input.Role == nil {
@@ -130,14 +162,33 @@ func (service *usersService) Update(ctx context.Context, actor dto.Actor, id str
 
 	user, err := service.users.Update(ctx, id, data)
 	if err != nil {
-		return nil, mapUserRepositoryError(err)
+		mappedErr := mapUserRepositoryError(err)
+		email := ""
+		if input.Email != nil {
+			email = *input.Email
+		}
+		logUserRepositoryError(service.logger, mappedErr, "user update failed", email)
+		return nil, mappedErr
 	}
+
+	event := service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("user_id", user.ID)
+	if input.Role != nil {
+		event = event.Str("role", string(*input.Role))
+	}
+	event.Msg("user updated")
 
 	return toUserOutput(user), nil
 }
 
 func (service *usersService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if actor.Role != repositories.UserRoleAdministrator {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Str("user_id", id).
+			Msg("user deletion denied")
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -148,7 +199,24 @@ func (service *usersService) Delete(ctx context.Context, actor dto.Actor, id str
 		return mapUserRepositoryError(err)
 	}
 
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("user_id", id).
+		Msg("user deleted")
+
 	return nil
+}
+
+func logUserRepositoryError(logger zerolog.Logger, err error, message string, email string) {
+	event := logger.Error().Err(err)
+	if errors.Is(err, ErrDuplicateUserEmail) {
+		event = logger.Warn().Err(err)
+	}
+	if email != "" {
+		event = event.Str("email", email)
+	}
+
+	event.Msg(message)
 }
 
 func normalizeEmail(value string) string {

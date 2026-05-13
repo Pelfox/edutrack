@@ -9,6 +9,7 @@ import (
 	"github.com/Pelfox/edutrack/backend/internal/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 // GradesService описывает операции модуля оценок.
@@ -34,6 +35,7 @@ type gradesService struct {
 	students    repositories.StudentRepository
 	curriculums repositories.CurriculumRepository
 	validator   *validator.Validate
+	logger      zerolog.Logger
 }
 
 // NewGradeService создаёт сервис оценок.
@@ -41,17 +43,20 @@ func NewGradeService(
 	grades repositories.GradeRepository,
 	students repositories.StudentRepository,
 	curriculums repositories.CurriculumRepository,
+	logger zerolog.Logger,
 ) GradesService {
 	return &gradesService{
 		grades:      grades,
 		students:    students,
 		curriculums: curriculums,
 		validator:   validator.New(validator.WithRequiredStructEnabled()),
+		logger:      logger,
 	}
 }
 
 func (service *gradesService) Create(ctx context.Context, actor dto.Actor, input dto.CreateGrade) (*dto.Grade, error) {
 	if !canManageGrades(actor) {
+		service.logGradeAccessDenied(actor, "", "grade creation denied")
 		return nil, ErrForbidden
 	}
 	input.Comment = normalizeOptionalText(input.Comment)
@@ -76,6 +81,15 @@ func (service *gradesService) Create(ctx context.Context, actor dto.Actor, input
 	if err != nil {
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("actor_role", string(actor.Role)).
+		Str("grade_id", grade.ID).
+		Str("curriculum_id", grade.CurriculumID).
+		Str("student_id", grade.StudentID).
+		Int("value", grade.Value).
+		Msg("grade created")
 
 	return toGradeOutput(grade), nil
 }
@@ -131,6 +145,7 @@ func (service *gradesService) GetByID(ctx context.Context, actor dto.Actor, id s
 
 func (service *gradesService) Update(ctx context.Context, actor dto.Actor, id string, input dto.UpdateGrade) (*dto.Grade, error) {
 	if !canManageGrades(actor) {
+		service.logGradeAccessDenied(actor, id, "grade update denied")
 		return nil, ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -172,6 +187,15 @@ func (service *gradesService) Update(ctx context.Context, actor dto.Actor, id st
 		return nil, mapDirectoryRepositoryError(err)
 	}
 
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("actor_role", string(actor.Role)).
+		Str("grade_id", grade.ID).
+		Str("curriculum_id", grade.CurriculumID).
+		Str("student_id", grade.StudentID).
+		Int("value", grade.Value).
+		Msg("grade updated")
+
 	return toGradeOutput(grade), nil
 }
 
@@ -185,6 +209,13 @@ func (service *gradesService) ensureCanWriteGrade(ctx context.Context, actor dto
 		return mapDirectoryRepositoryError(err)
 	}
 	if curriculum.LeadBy != actor.ID {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Str("curriculum_id", curriculumID).
+			Str("student_id", studentID).
+			Str("lead_by", curriculum.LeadBy).
+			Msg("grade write denied")
 		return ErrForbidden
 	}
 
@@ -201,6 +232,7 @@ func (service *gradesService) ensureCanWriteGrade(ctx context.Context, actor dto
 
 func (service *gradesService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if !canManageGrades(actor) {
+		service.logGradeAccessDenied(actor, id, "grade deletion denied")
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -219,6 +251,12 @@ func (service *gradesService) Delete(ctx context.Context, actor dto.Actor, id st
 		return mapDirectoryRepositoryError(err)
 	}
 
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("actor_role", string(actor.Role)).
+		Str("grade_id", id).
+		Msg("grade deleted")
+
 	return nil
 }
 
@@ -232,10 +270,27 @@ func (service *gradesService) ensureCanReadGrade(ctx context.Context, actor dto.
 		return mapDirectoryRepositoryError(err)
 	}
 	if grade.StudentID != student.ID {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("actor_role", string(actor.Role)).
+			Str("grade_id", grade.ID).
+			Str("student_id", student.ID).
+			Msg("grade read denied")
 		return ErrForbidden
 	}
 
 	return nil
+}
+
+func (service *gradesService) logGradeAccessDenied(actor dto.Actor, gradeID string, message string) {
+	event := service.logger.Warn().
+		Str("actor_id", actor.ID).
+		Str("actor_role", string(actor.Role))
+	if gradeID != "" {
+		event = event.Str("grade_id", gradeID)
+	}
+
+	event.Msg(message)
 }
 
 func canManageGrades(actor dto.Actor) bool {

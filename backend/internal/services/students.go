@@ -9,6 +9,7 @@ import (
 	"github.com/Pelfox/edutrack/backend/internal/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 // StudentsService описывает операции модуля студентов.
@@ -36,19 +37,26 @@ type studentsService struct {
 	students    repositories.StudentRepository
 	curriculums repositories.CurriculumRepository
 	validator   *validator.Validate
+	logger      zerolog.Logger
 }
 
 // NewStudentService создаёт сервис студентов.
-func NewStudentService(students repositories.StudentRepository, curriculums repositories.CurriculumRepository) StudentsService {
+func NewStudentService(
+	students repositories.StudentRepository,
+	curriculums repositories.CurriculumRepository,
+	logger zerolog.Logger,
+) StudentsService {
 	return &studentsService{
 		students:    students,
 		curriculums: curriculums,
 		validator:   validator.New(validator.WithRequiredStructEnabled()),
+		logger:      logger,
 	}
 }
 
 func (service *studentsService) Create(ctx context.Context, actor dto.Actor, input dto.CreateStudent) (*dto.Student, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "student", "", "student creation denied")
 		return nil, ErrForbidden
 	}
 	input.LastName = normalizeText(input.LastName)
@@ -70,19 +78,29 @@ func (service *studentsService) Create(ctx context.Context, actor dto.Actor, inp
 		UpdatedAt:  now,
 	})
 	if err != nil {
+		logRepositoryError(service.logger, err, "student", "", "student creation failed")
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("student_id", student.ID).
+		Str("user_id", student.UserID).
+		Str("group_id", student.GroupID).
+		Msg("student created")
 
 	return toStudentOutput(student), nil
 }
 
 func (service *studentsService) List(ctx context.Context, actor dto.Actor) ([]dto.Student, error) {
 	if actor.Role != repositories.UserRoleAdministrator && actor.Role != repositories.UserRoleTeacher {
+		logAccessDenied(service.logger, actor, "student", "", "students list denied")
 		return nil, ErrForbidden
 	}
 
 	students, err := service.students.List(ctx)
 	if err != nil {
+		logRepositoryError(service.logger, err, "student", "", "students list failed")
 		return nil, err
 	}
 	if actor.Role == repositories.UserRoleTeacher {
@@ -91,6 +109,11 @@ func (service *studentsService) List(ctx context.Context, actor dto.Actor) ([]dt
 			return nil, err
 		}
 		students = filterStudentsByGroup(students, availableGroupIDs)
+		service.logger.Info().
+			Str("actor_id", actor.ID).
+			Int("groups_count", len(availableGroupIDs)).
+			Int("students_count", len(students)).
+			Msg("teacher students list filtered")
 	}
 
 	output := make([]dto.Student, 0, len(students))
@@ -115,6 +138,7 @@ func (service *studentsService) GetByID(ctx context.Context, actor dto.Actor, id
 			return nil, err
 		}
 	} else if actor.Role != repositories.UserRoleAdministrator && actor.ID != student.UserID {
+		logAccessDenied(service.logger, actor, "student", student.ID, "student access denied")
 		return nil, ErrForbidden
 	}
 
@@ -127,6 +151,12 @@ func (service *studentsService) ensureTeacherCanReadStudent(ctx context.Context,
 		return err
 	}
 	if _, ok := groupIDs[student.GroupID]; !ok {
+		service.logger.Warn().
+			Str("actor_id", teacherUserID).
+			Str("actor_role", string(repositories.UserRoleTeacher)).
+			Str("student_id", student.ID).
+			Str("group_id", student.GroupID).
+			Msg("teacher student access denied")
 		return ErrForbidden
 	}
 
@@ -136,6 +166,7 @@ func (service *studentsService) ensureTeacherCanReadStudent(ctx context.Context,
 func (service *studentsService) teacherGroupIDs(ctx context.Context, teacherUserID string) (map[string]struct{}, error) {
 	curriculums, err := service.curriculums.List(ctx)
 	if err != nil {
+		logRepositoryError(service.logger, err, "curriculum", "", "teacher groups lookup failed")
 		return nil, err
 	}
 
@@ -167,7 +198,9 @@ func (service *studentsService) GetMe(ctx context.Context, actor dto.Actor) (*dt
 
 	student, err := service.students.GetByUserID(ctx, actor.ID)
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "student", actor.ID, "current student lookup failed")
+		return nil, mappedErr
 	}
 
 	return toStudentOutput(student), nil
@@ -175,6 +208,7 @@ func (service *studentsService) GetMe(ctx context.Context, actor dto.Actor) (*dt
 
 func (service *studentsService) Update(ctx context.Context, actor dto.Actor, id string, input dto.UpdateStudent) (*dto.Student, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "student", id, "student update denied")
 		return nil, ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -206,14 +240,24 @@ func (service *studentsService) Update(ctx context.Context, actor dto.Actor, id 
 		UpdatedAt:     time.Now().UTC(),
 	})
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "student", id, "student update failed")
+		return nil, mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("student_id", student.ID).
+		Str("user_id", student.UserID).
+		Str("group_id", student.GroupID).
+		Msg("student updated")
 
 	return toStudentOutput(student), nil
 }
 
 func (service *studentsService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "student", id, "student deletion denied")
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -221,8 +265,15 @@ func (service *studentsService) Delete(ctx context.Context, actor dto.Actor, id 
 	}
 
 	if err := service.students.Delete(ctx, id); err != nil {
-		return mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "student", id, "student deletion failed")
+		return mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("student_id", id).
+		Msg("student deleted")
 
 	return nil
 }

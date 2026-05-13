@@ -9,6 +9,7 @@ import (
 	"github.com/Pelfox/edutrack/backend/internal/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 // ProfileService описывает операции с профилем текущего пользователя.
@@ -37,25 +38,32 @@ type StaffProfilesService interface {
 
 type profileService struct {
 	profiles repositories.ProfileRepository
+	logger   zerolog.Logger
 }
 
 type staffProfilesService struct {
 	profiles  repositories.ProfileRepository
 	users     repositories.UserRepository
 	validator *validator.Validate
+	logger    zerolog.Logger
 }
 
 // NewProfileService создаёт сервис профилей пользователей.
-func NewProfileService(profiles repositories.ProfileRepository) ProfileService {
-	return &profileService{profiles: profiles}
+func NewProfileService(profiles repositories.ProfileRepository, logger zerolog.Logger) ProfileService {
+	return &profileService{profiles: profiles, logger: logger}
 }
 
 // NewStaffProfilesService создаёт сервис профилей сотрудников.
-func NewStaffProfilesService(profiles repositories.ProfileRepository, users repositories.UserRepository) StaffProfilesService {
+func NewStaffProfilesService(
+	profiles repositories.ProfileRepository,
+	users repositories.UserRepository,
+	logger zerolog.Logger,
+) StaffProfilesService {
 	return &staffProfilesService{
 		profiles:  profiles,
 		users:     users,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
+		logger:    logger,
 	}
 }
 
@@ -66,7 +74,9 @@ func (service *profileService) GetMe(ctx context.Context, actor dto.Actor) (*dto
 
 	profile, err := service.profiles.GetByUserID(ctx, actor.ID, actor.Role)
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "profile", actor.ID, "current profile lookup failed")
+		return nil, mappedErr
 	}
 
 	return toProfileOutput(profile), nil
@@ -74,6 +84,7 @@ func (service *profileService) GetMe(ctx context.Context, actor dto.Actor) (*dto
 
 func (service *staffProfilesService) Create(ctx context.Context, actor dto.Actor, role repositories.UserRole, input dto.CreateProfile) (*dto.Profile, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, string(role)+"_profile", "", "staff profile creation denied")
 		return nil, ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {
@@ -88,9 +99,17 @@ func (service *staffProfilesService) Create(ctx context.Context, actor dto.Actor
 
 	user, err := service.users.GetByID(ctx, input.UserID)
 	if err != nil {
-		return nil, mapUserRepositoryError(err)
+		mappedErr := mapUserRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "user", input.UserID, "staff profile user lookup failed")
+		return nil, mappedErr
 	}
 	if user.Role != role {
+		service.logger.Warn().
+			Str("actor_id", actor.ID).
+			Str("user_id", user.ID).
+			Str("user_role", string(user.Role)).
+			Str("profile_role", string(role)).
+			Msg("staff profile role mismatch")
 		return nil, fmt.Errorf("%w: user role does not match profile role", ErrInvalidInput)
 	}
 
@@ -105,8 +124,16 @@ func (service *staffProfilesService) Create(ctx context.Context, actor dto.Actor
 		UpdatedAt:  now,
 	})
 	if err != nil {
+		logRepositoryError(service.logger, err, string(role)+"_profile", "", "staff profile creation failed")
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("profile_id", profile.ID).
+		Str("user_id", profile.UserID).
+		Str("role", string(role)).
+		Msg("staff profile created")
 
 	return toProfileOutput(profile), nil
 }
@@ -116,6 +143,7 @@ func (service *staffProfilesService) List(ctx context.Context, actor dto.Actor, 
 		return nil, ErrUnauthenticatedUser
 	}
 	if role != repositories.UserRoleTeacher && actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, string(role)+"_profile", "", "staff profiles list denied")
 		return nil, ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {
@@ -124,6 +152,7 @@ func (service *staffProfilesService) List(ctx context.Context, actor dto.Actor, 
 
 	profiles, err := service.profiles.List(ctx, role)
 	if err != nil {
+		logRepositoryError(service.logger, err, string(role)+"_profile", "", "staff profiles list failed")
 		return nil, err
 	}
 
@@ -140,6 +169,7 @@ func (service *staffProfilesService) GetByID(ctx context.Context, actor dto.Acto
 		return nil, ErrUnauthenticatedUser
 	}
 	if role != repositories.UserRoleTeacher && actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, string(role)+"_profile", id, "staff profile access denied")
 		return nil, ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {
@@ -151,7 +181,9 @@ func (service *staffProfilesService) GetByID(ctx context.Context, actor dto.Acto
 
 	profile, err := service.profiles.GetByID(ctx, id, role)
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, string(role)+"_profile", id, "staff profile lookup failed")
+		return nil, mappedErr
 	}
 
 	return toProfileOutput(profile), nil
@@ -159,6 +191,7 @@ func (service *staffProfilesService) GetByID(ctx context.Context, actor dto.Acto
 
 func (service *staffProfilesService) Update(ctx context.Context, actor dto.Actor, role repositories.UserRole, id string, input dto.UpdateProfile) (*dto.Profile, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, string(role)+"_profile", id, "staff profile update denied")
 		return nil, ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {
@@ -192,14 +225,24 @@ func (service *staffProfilesService) Update(ctx context.Context, actor dto.Actor
 		UpdatedAt:     time.Now().UTC(),
 	})
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, string(role)+"_profile", id, "staff profile update failed")
+		return nil, mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("profile_id", profile.ID).
+		Str("user_id", profile.UserID).
+		Str("role", string(role)).
+		Msg("staff profile updated")
 
 	return toProfileOutput(profile), nil
 }
 
 func (service *staffProfilesService) Delete(ctx context.Context, actor dto.Actor, role repositories.UserRole, id string) error {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, string(role)+"_profile", id, "staff profile deletion denied")
 		return ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {
@@ -210,8 +253,16 @@ func (service *staffProfilesService) Delete(ctx context.Context, actor dto.Actor
 	}
 
 	if err := service.profiles.Delete(ctx, id, role); err != nil {
-		return mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, string(role)+"_profile", id, "staff profile deletion failed")
+		return mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("profile_id", id).
+		Str("role", string(role)).
+		Msg("staff profile deleted")
 
 	return nil
 }

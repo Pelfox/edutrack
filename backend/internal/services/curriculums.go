@@ -8,6 +8,7 @@ import (
 	"github.com/Pelfox/edutrack/backend/internal/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 // CurriculumsService описывает операции модуля учебных планов.
@@ -31,18 +32,21 @@ type CurriculumsService interface {
 type curriculumsService struct {
 	curriculums repositories.CurriculumRepository
 	validator   *validator.Validate
+	logger      zerolog.Logger
 }
 
 // NewCurriculumService создаёт сервис учебных планов.
-func NewCurriculumService(curriculums repositories.CurriculumRepository) CurriculumsService {
+func NewCurriculumService(curriculums repositories.CurriculumRepository, logger zerolog.Logger) CurriculumsService {
 	return &curriculumsService{
 		curriculums: curriculums,
 		validator:   validator.New(validator.WithRequiredStructEnabled()),
+		logger:      logger,
 	}
 }
 
 func (service *curriculumsService) Create(ctx context.Context, actor dto.Actor, input dto.CreateCurriculum) (*dto.Curriculum, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "curriculum", "", "curriculum creation denied")
 		return nil, ErrForbidden
 	}
 	if err := validateStruct(service.validator, input); err != nil {
@@ -59,8 +63,17 @@ func (service *curriculumsService) Create(ctx context.Context, actor dto.Actor, 
 		LeadBy:     input.LeadBy,
 	})
 	if err != nil {
+		logRepositoryError(service.logger, err, "curriculum", "", "curriculum creation failed")
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("curriculum_id", curriculum.ID).
+		Str("subject_id", curriculum.SubjectID).
+		Str("group_id", curriculum.GroupID).
+		Str("lead_by", curriculum.LeadBy).
+		Msg("curriculum created")
 
 	return toCurriculumOutput(curriculum), nil
 }
@@ -72,6 +85,7 @@ func (service *curriculumsService) List(ctx context.Context, actor dto.Actor) ([
 
 	curriculums, err := service.curriculums.List(ctx)
 	if err != nil {
+		logRepositoryError(service.logger, err, "curriculum", "", "curriculums list failed")
 		return nil, err
 	}
 
@@ -101,6 +115,7 @@ func (service *curriculumsService) GetByID(ctx context.Context, actor dto.Actor,
 
 func (service *curriculumsService) Update(ctx context.Context, actor dto.Actor, id string, input dto.UpdateCurriculum) (*dto.Curriculum, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "curriculum", id, "curriculum update denied")
 		return nil, ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -122,14 +137,25 @@ func (service *curriculumsService) Update(ctx context.Context, actor dto.Actor, 
 		LeadBy:     input.LeadBy,
 	})
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "curriculum", id, "curriculum update failed")
+		return nil, mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("curriculum_id", curriculum.ID).
+		Str("subject_id", curriculum.SubjectID).
+		Str("group_id", curriculum.GroupID).
+		Str("lead_by", curriculum.LeadBy).
+		Msg("curriculum updated")
 
 	return toCurriculumOutput(curriculum), nil
 }
 
 func (service *curriculumsService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "curriculum", id, "curriculum deletion denied")
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -137,8 +163,15 @@ func (service *curriculumsService) Delete(ctx context.Context, actor dto.Actor, 
 	}
 
 	if err := service.curriculums.Delete(ctx, id); err != nil {
-		return mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "curriculum", id, "curriculum deletion failed")
+		return mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("curriculum_id", id).
+		Msg("curriculum deleted")
 
 	return nil
 }

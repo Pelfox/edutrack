@@ -8,6 +8,7 @@ import (
 	"github.com/Pelfox/edutrack/backend/internal/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 // SubjectsService описывает операции модуля предметов.
@@ -31,18 +32,21 @@ type SubjectsService interface {
 type subjectsService struct {
 	subjects  repositories.SubjectRepository
 	validator *validator.Validate
+	logger    zerolog.Logger
 }
 
 // NewSubjectService создаёт сервис предметов.
-func NewSubjectService(subjects repositories.SubjectRepository) SubjectsService {
+func NewSubjectService(subjects repositories.SubjectRepository, logger zerolog.Logger) SubjectsService {
 	return &subjectsService{
 		subjects:  subjects,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
+		logger:    logger,
 	}
 }
 
 func (service *subjectsService) Create(ctx context.Context, actor dto.Actor, input dto.CreateSubject) (*dto.Subject, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "subject", "", "subject creation denied")
 		return nil, ErrForbidden
 	}
 	input.Title = normalizeText(input.Title)
@@ -56,8 +60,15 @@ func (service *subjectsService) Create(ctx context.Context, actor dto.Actor, inp
 		CreatedAt: time.Now().UTC(),
 	})
 	if err != nil {
+		logRepositoryError(service.logger, err, "subject", "", "subject creation failed")
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("subject_id", subject.ID).
+		Str("title", subject.Title).
+		Msg("subject created")
 
 	return toSubjectOutput(subject), nil
 }
@@ -69,6 +80,7 @@ func (service *subjectsService) List(ctx context.Context, actor dto.Actor) ([]dt
 
 	subjects, err := service.subjects.List(ctx)
 	if err != nil {
+		logRepositoryError(service.logger, err, "subject", "", "subjects list failed")
 		return nil, err
 	}
 
@@ -98,6 +110,7 @@ func (service *subjectsService) GetByID(ctx context.Context, actor dto.Actor, id
 
 func (service *subjectsService) Update(ctx context.Context, actor dto.Actor, id string, input dto.UpdateSubject) (*dto.Subject, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "subject", id, "subject update denied")
 		return nil, ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -110,14 +123,23 @@ func (service *subjectsService) Update(ctx context.Context, actor dto.Actor, id 
 
 	subject, err := service.subjects.Update(ctx, id, repositories.SubjectUpdateData{Title: input.Title})
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "subject", id, "subject update failed")
+		return nil, mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("subject_id", subject.ID).
+		Str("title", subject.Title).
+		Msg("subject updated")
 
 	return toSubjectOutput(subject), nil
 }
 
 func (service *subjectsService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "subject", id, "subject deletion denied")
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -125,8 +147,15 @@ func (service *subjectsService) Delete(ctx context.Context, actor dto.Actor, id 
 	}
 
 	if err := service.subjects.Delete(ctx, id); err != nil {
-		return mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "subject", id, "subject deletion failed")
+		return mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("subject_id", id).
+		Msg("subject deleted")
 
 	return nil
 }

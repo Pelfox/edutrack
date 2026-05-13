@@ -5,6 +5,7 @@ import (
 
 	"github.com/Pelfox/edutrack/backend/internal/dto"
 	"github.com/Pelfox/edutrack/backend/internal/repositories"
+	"github.com/rs/zerolog"
 )
 
 // AnalyticsService описывает операции модуля аналитики.
@@ -15,22 +16,33 @@ type AnalyticsService interface {
 
 type analyticsService struct {
 	analytics repositories.AnalyticsRepository
+	logger    zerolog.Logger
 }
 
 // NewAnalyticsService создаёт сервис аналитики.
-func NewAnalyticsService(analytics repositories.AnalyticsRepository) AnalyticsService {
-	return &analyticsService{analytics: analytics}
+func NewAnalyticsService(analytics repositories.AnalyticsRepository, logger zerolog.Logger) AnalyticsService {
+	return &analyticsService{analytics: analytics, logger: logger}
 }
 
 func (service *analyticsService) GetOverview(ctx context.Context, actor dto.Actor) (*dto.AnalyticsOverview, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "analytics", "overview", "analytics overview denied")
 		return nil, ErrForbidden
 	}
 
 	overview, err := service.analytics.GetOverview(ctx)
 	if err != nil {
+		logRepositoryError(service.logger, err, "analytics", "overview", "analytics overview failed")
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Int("students_count", overview.StudentsCount).
+		Int("teachers_count", overview.TeachersCount).
+		Int("groups_count", overview.GroupsCount).
+		Int("grades_count", overview.GradesCount).
+		Msg("analytics overview loaded")
 
 	return toAnalyticsOverviewOutput(overview), nil
 }

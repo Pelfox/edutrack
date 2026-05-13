@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
 )
 
 // SpecialtiesService описывает операции модуля специальностей.
@@ -34,18 +35,21 @@ type SpecialtiesService interface {
 type specialtiesService struct {
 	specialties repositories.SpecialtyRepository
 	validator   *validator.Validate
+	logger      zerolog.Logger
 }
 
 // NewSpecialtyService создаёт сервис специальностей.
-func NewSpecialtyService(specialties repositories.SpecialtyRepository) SpecialtiesService {
+func NewSpecialtyService(specialties repositories.SpecialtyRepository, logger zerolog.Logger) SpecialtiesService {
 	return &specialtiesService{
 		specialties: specialties,
 		validator:   validator.New(validator.WithRequiredStructEnabled()),
+		logger:      logger,
 	}
 }
 
 func (service *specialtiesService) Create(ctx context.Context, actor dto.Actor, input dto.CreateSpecialty) (*dto.Specialty, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "specialty", "", "specialty creation denied")
 		return nil, ErrForbidden
 	}
 	input.Title = normalizeText(input.Title)
@@ -59,8 +63,15 @@ func (service *specialtiesService) Create(ctx context.Context, actor dto.Actor, 
 		CreatedAt: time.Now().UTC(),
 	})
 	if err != nil {
+		logRepositoryError(service.logger, err, "specialty", "", "specialty creation failed")
 		return nil, err
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("specialty_id", specialty.ID).
+		Str("title", specialty.Title).
+		Msg("specialty created")
 
 	return toSpecialtyOutput(specialty), nil
 }
@@ -72,6 +83,7 @@ func (service *specialtiesService) List(ctx context.Context, actor dto.Actor) ([
 
 	specialties, err := service.specialties.List(ctx)
 	if err != nil {
+		logRepositoryError(service.logger, err, "specialty", "", "specialties list failed")
 		return nil, err
 	}
 
@@ -101,6 +113,7 @@ func (service *specialtiesService) GetByID(ctx context.Context, actor dto.Actor,
 
 func (service *specialtiesService) Update(ctx context.Context, actor dto.Actor, id string, input dto.UpdateSpecialty) (*dto.Specialty, error) {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "specialty", id, "specialty update denied")
 		return nil, ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -115,14 +128,23 @@ func (service *specialtiesService) Update(ctx context.Context, actor dto.Actor, 
 		Title: input.Title,
 	})
 	if err != nil {
-		return nil, mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "specialty", id, "specialty update failed")
+		return nil, mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("specialty_id", specialty.ID).
+		Str("title", specialty.Title).
+		Msg("specialty updated")
 
 	return toSpecialtyOutput(specialty), nil
 }
 
 func (service *specialtiesService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if actor.Role != repositories.UserRoleAdministrator {
+		logAccessDenied(service.logger, actor, "specialty", id, "specialty deletion denied")
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
@@ -130,8 +152,15 @@ func (service *specialtiesService) Delete(ctx context.Context, actor dto.Actor, 
 	}
 
 	if err := service.specialties.Delete(ctx, id); err != nil {
-		return mapDirectoryRepositoryError(err)
+		mappedErr := mapDirectoryRepositoryError(err)
+		logRepositoryError(service.logger, mappedErr, "specialty", id, "specialty deletion failed")
+		return mappedErr
 	}
+
+	service.logger.Info().
+		Str("actor_id", actor.ID).
+		Str("specialty_id", id).
+		Msg("specialty deleted")
 
 	return nil
 }

@@ -23,9 +23,10 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 	defer db.Close()
+	logger.Info().Msg("connected to database")
 
-	router := gin.Default()
-	router.Use(corsMiddleware())
+	router := gin.New()
+	router.Use(controllers.RequestLoggerMiddleware(logger), controllers.RecoveryMiddleware(), corsMiddleware())
 
 	userRepository := repositories.NewUserRepository(db)
 	specialtyRepository := repositories.NewSpecialtyRepository(db)
@@ -36,17 +37,30 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	curriculumRepository := repositories.NewCurriculumRepository(db)
 	gradeRepository := repositories.NewGradeRepository(db)
 	analyticsRepository := repositories.NewAnalyticsRepository(db)
-	userService := services.NewUserService(userRepository)
-	authService := services.NewAuthService(userRepository, appConfig.JWTSecret)
-	specialtyService := services.NewSpecialtyService(specialtyRepository)
-	groupService := services.NewGroupService(groupRepository)
-	studentService := services.NewStudentService(studentRepository, curriculumRepository)
-	profileService := services.NewProfileService(profileRepository)
-	staffProfileService := services.NewStaffProfilesService(profileRepository, userRepository)
-	subjectService := services.NewSubjectService(subjectRepository)
-	curriculumService := services.NewCurriculumService(curriculumRepository)
-	gradeService := services.NewGradeService(gradeRepository, studentRepository, curriculumRepository)
-	analyticsService := services.NewAnalyticsService(analyticsRepository)
+	userService := services.NewUserService(userRepository, logger.With().Str("component", "users_service").Logger())
+	authService := services.NewAuthService(userRepository, appConfig.JWTSecret, logger.With().Str("component", "auth_service").Logger())
+	specialtyService := services.NewSpecialtyService(specialtyRepository, logger.With().Str("component", "specialties_service").Logger())
+	groupService := services.NewGroupService(groupRepository, logger.With().Str("component", "groups_service").Logger())
+	studentService := services.NewStudentService(
+		studentRepository,
+		curriculumRepository,
+		logger.With().Str("component", "students_service").Logger(),
+	)
+	profileService := services.NewProfileService(profileRepository, logger.With().Str("component", "profile_service").Logger())
+	staffProfileService := services.NewStaffProfilesService(
+		profileRepository,
+		userRepository,
+		logger.With().Str("component", "staff_profiles_service").Logger(),
+	)
+	subjectService := services.NewSubjectService(subjectRepository, logger.With().Str("component", "subjects_service").Logger())
+	curriculumService := services.NewCurriculumService(curriculumRepository, logger.With().Str("component", "curriculums_service").Logger())
+	gradeService := services.NewGradeService(
+		gradeRepository,
+		studentRepository,
+		curriculumRepository,
+		logger.With().Str("component", "grades_service").Logger(),
+	)
+	analyticsService := services.NewAnalyticsService(analyticsRepository, logger.With().Str("component", "analytics_service").Logger())
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService)
 	specialtyController := controllers.NewSpecialtyController(specialtyService)
@@ -83,6 +97,7 @@ func StartApp(logger zerolog.Logger, appConfig *config.AppConfig) error {
 	)))
 
 	// Запускаем HTTP-сервер и ожидаем новые подключения.
+	logger.Info().Str("listen_addr", appConfig.ListenAddr).Msg("starting http server")
 	if err := router.Run(appConfig.ListenAddr); err != nil {
 		return fmt.Errorf("failed to start up the server: %w", err)
 	}
@@ -101,8 +116,9 @@ func corsMiddleware() gin.HandlerFunc {
 		if _, ok := allowedOrigins[origin]; ok {
 			ctx.Header("Access-Control-Allow-Origin", origin)
 			ctx.Header("Access-Control-Allow-Credentials", "true")
-			ctx.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			ctx.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Request-ID")
 			ctx.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			ctx.Header("Access-Control-Expose-Headers", "X-Request-ID")
 			ctx.Header("Vary", "Origin")
 		}
 
