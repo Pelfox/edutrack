@@ -30,17 +30,23 @@ type GradesService interface {
 }
 
 type gradesService struct {
-	grades    repositories.GradeRepository
-	students  repositories.StudentRepository
-	validator *validator.Validate
+	grades      repositories.GradeRepository
+	students    repositories.StudentRepository
+	curriculums repositories.CurriculumRepository
+	validator   *validator.Validate
 }
 
 // NewGradeService создаёт сервис оценок.
-func NewGradeService(grades repositories.GradeRepository, students repositories.StudentRepository) GradesService {
+func NewGradeService(
+	grades repositories.GradeRepository,
+	students repositories.StudentRepository,
+	curriculums repositories.CurriculumRepository,
+) GradesService {
 	return &gradesService{
-		grades:    grades,
-		students:  students,
-		validator: validator.New(validator.WithRequiredStructEnabled()),
+		grades:      grades,
+		students:    students,
+		curriculums: curriculums,
+		validator:   validator.New(validator.WithRequiredStructEnabled()),
 	}
 }
 
@@ -50,6 +56,9 @@ func (service *gradesService) Create(ctx context.Context, actor dto.Actor, input
 	}
 	input.Comment = normalizeOptionalText(input.Comment)
 	if err := validateStruct(service.validator, input); err != nil {
+		return nil, err
+	}
+	if err := service.ensureCanWriteGrade(ctx, actor, input.CurriculumID, input.StudentID); err != nil {
 		return nil, err
 	}
 
@@ -135,6 +144,21 @@ func (service *gradesService) Update(ctx context.Context, actor dto.Actor, id st
 	if err := validateStruct(service.validator, input); err != nil {
 		return nil, err
 	}
+	existingGrade, err := service.grades.GetByID(ctx, id)
+	if err != nil {
+		return nil, mapDirectoryRepositoryError(err)
+	}
+	curriculumID := existingGrade.CurriculumID
+	if input.CurriculumID != nil {
+		curriculumID = *input.CurriculumID
+	}
+	studentID := existingGrade.StudentID
+	if input.StudentID != nil {
+		studentID = *input.StudentID
+	}
+	if err := service.ensureCanWriteGrade(ctx, actor, curriculumID, studentID); err != nil {
+		return nil, err
+	}
 
 	grade, err := service.grades.Update(ctx, id, repositories.GradeUpdateData{
 		CurriculumID: input.CurriculumID,
@@ -151,11 +175,43 @@ func (service *gradesService) Update(ctx context.Context, actor dto.Actor, id st
 	return toGradeOutput(grade), nil
 }
 
+func (service *gradesService) ensureCanWriteGrade(ctx context.Context, actor dto.Actor, curriculumID string, studentID string) error {
+	if actor.Role == repositories.UserRoleAdministrator {
+		return nil
+	}
+
+	curriculum, err := service.curriculums.GetByID(ctx, curriculumID)
+	if err != nil {
+		return mapDirectoryRepositoryError(err)
+	}
+	if curriculum.LeadBy != actor.ID {
+		return ErrForbidden
+	}
+
+	student, err := service.students.GetByID(ctx, studentID)
+	if err != nil {
+		return mapDirectoryRepositoryError(err)
+	}
+	if student.GroupID != curriculum.GroupID {
+		return fmt.Errorf("%w: student is not assigned to curriculum group", ErrInvalidInput)
+	}
+
+	return nil
+}
+
 func (service *gradesService) Delete(ctx context.Context, actor dto.Actor, id string) error {
 	if !canManageGrades(actor) {
 		return ErrForbidden
 	}
 	if err := validateUUID(id); err != nil {
+		return err
+	}
+
+	grade, err := service.grades.GetByID(ctx, id)
+	if err != nil {
+		return mapDirectoryRepositoryError(err)
+	}
+	if err := service.ensureCanWriteGrade(ctx, actor, grade.CurriculumID, grade.StudentID); err != nil {
 		return err
 	}
 

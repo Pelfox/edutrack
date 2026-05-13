@@ -53,7 +53,7 @@ export function DashboardView({
       )}
     >
       {role === "administrator" && <AdministratorDashboard page={administratorPage} />}
-      {role === "teacher" && <TeacherDashboard page={teacherPage} />}
+      {role === "teacher" && <TeacherDashboard page={teacherPage} profile={profile} user={user} />}
       {role === "student" && <StudentDashboard page={studentPage} />}
     </DashboardShell>
   );
