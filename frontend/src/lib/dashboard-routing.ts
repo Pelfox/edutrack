@@ -41,7 +41,13 @@ export function isDashboardPageAvailable(role: DashboardRole | undefined, page: 
     );
   }
 
-  return page === "disciplines" || page === "grades" || page === "schedule";
+  if (role === "teacher") {
+    return page === "disciplines" || page === "grades" || page === "schedule";
+  }
+
+  return (
+    page === "disciplines" || page === "curriculums" || page === "grades" || page === "schedule"
+  );
 }
 
 export function getAdministratorPage(page: DashboardPage): AdministratorPage {
@@ -69,7 +75,12 @@ export function getTeacherPage(page: DashboardPage): TeacherPage {
 }
 
 export function getStudentPage(page: DashboardPage): StudentPage {
-  if (page === "disciplines" || page === "grades" || page === "schedule") {
+  if (
+    page === "disciplines" ||
+    page === "curriculums" ||
+    page === "grades" ||
+    page === "schedule"
+  ) {
     return page;
   }
 

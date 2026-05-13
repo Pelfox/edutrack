@@ -65,7 +65,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AuthProfile, AuthUser } from "@/lib/context/auth";
 
 export type TeacherPage = "home" | "disciplines" | "grades" | "schedule";
@@ -248,10 +247,7 @@ function TeacherSchedulePage({ workspace }: { workspace: TeacherWorkspace }) {
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <TeacherPageHeader
-        description="Расписание строится из учебных планов"
-        title="Расписание"
-      />
+      <TeacherPageHeader description="Расписание строится из учебных планов" title="Расписание" />
       <SimpleStatsGrid cardClassName="h-36" stats={stats} />
       <SchedulePlaceholder courses={workspace.courses} isLoading={workspace.isLoading} />
     </div>
@@ -275,30 +271,6 @@ function TeacherPageHeader({
       </div>
       {action}
     </div>
-  );
-}
-
-function TeacherTabs({
-  items,
-  value,
-}: {
-  items: { label: string; value: string }[];
-  value: string;
-}) {
-  return (
-    <Tabs value={value}>
-      <TabsList className="h-9 rounded-[14px] bg-muted p-[3px]">
-        {items.map((item) => (
-          <TabsTrigger
-            className="h-[29px] rounded-[14px] px-[9px] text-sm font-medium"
-            key={item.value}
-            value={item.value}
-          >
-            {item.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
   );
 }
 

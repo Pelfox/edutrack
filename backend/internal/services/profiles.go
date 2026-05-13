@@ -112,7 +112,10 @@ func (service *staffProfilesService) Create(ctx context.Context, actor dto.Actor
 }
 
 func (service *staffProfilesService) List(ctx context.Context, actor dto.Actor, role repositories.UserRole) ([]dto.Profile, error) {
-	if actor.Role != repositories.UserRoleAdministrator {
+	if role == repositories.UserRoleTeacher && actor.ID == "" {
+		return nil, ErrUnauthenticatedUser
+	}
+	if role != repositories.UserRoleTeacher && actor.Role != repositories.UserRoleAdministrator {
 		return nil, ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {
@@ -133,7 +136,10 @@ func (service *staffProfilesService) List(ctx context.Context, actor dto.Actor, 
 }
 
 func (service *staffProfilesService) GetByID(ctx context.Context, actor dto.Actor, role repositories.UserRole, id string) (*dto.Profile, error) {
-	if actor.Role != repositories.UserRoleAdministrator {
+	if role == repositories.UserRoleTeacher && actor.ID == "" {
+		return nil, ErrUnauthenticatedUser
+	}
+	if role != repositories.UserRoleTeacher && actor.Role != repositories.UserRoleAdministrator {
 		return nil, ErrForbidden
 	}
 	if err := validateStaffProfileRole(role); err != nil {

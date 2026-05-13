@@ -3,17 +3,16 @@ import {
   Award,
   BarChart3,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
-  Download,
-  FileText,
   GraduationCap,
   MapPin,
-  NotebookTabs,
   TrendingUp,
 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
+import type { components } from "@/api";
+import { apiClient } from "@/api";
 import type {
   CourseItem,
   GradeItem,
@@ -28,8 +27,6 @@ import {
   PageHeading,
   ScheduleList,
 } from "@/components/dashboard/dashboard-widgets";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -46,23 +43,42 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { AuthProfile } from "@/lib/context/auth";
 
-export type StudentPage = "home" | "disciplines" | "grades" | "schedule";
+export type StudentPage = "home" | "disciplines" | "curriculums" | "grades" | "schedule";
+
+type ApiCurriculum = components["schemas"]["dto.Curriculum"];
+type ApiGrade = components["schemas"]["dto.Grade"];
+type ApiGroup = components["schemas"]["dto.Group"];
+type ApiProfile = components["schemas"]["dto.Profile"];
+type ApiStudent = components["schemas"]["dto.Student"];
+type ApiSubject = components["schemas"]["dto.Subject"];
+
+type StudentWorkspace = {
+  courses: StudentCourse[];
+  grades: StudentGradeRecord[];
+  isLoading: boolean;
+  student: ApiStudent | null;
+};
 
 type StudentCourse = {
   id: string;
   title: string;
+  group: string;
   teacher: string;
   average: string;
-  materials: StudentMaterial[];
+  gradesCount: number;
+  hours: number;
+  reportType: string;
+  semester: number;
 };
 
-type StudentMaterial = {
+type StudentGradeRecord = {
   id: string;
-  title: string;
-  kind: string;
-  date: string;
+  courseTitle: string;
+  groupName: string;
+  value: number;
+  comment: string;
 };
 
 type StudentGradeSummary = {
@@ -75,286 +91,94 @@ type StudentGradeSummary = {
 
 type StudentGradeCourse = {
   title: string;
-  teacher: string;
   average: string;
   rows: StudentGradeRow[];
 };
 
 type StudentGradeRow = {
   assignment: string;
-  weight: string;
+  comment: string;
   grade: string;
-  tone?: "positive" | "blue";
+  tone: "positive" | "blue";
 };
 
-type StudentScheduleDay = {
-  day: string;
-  count: string;
-  lessons: StudentLesson[];
-};
+export function StudentDashboard({
+  page,
+  profile,
+}: {
+  page: StudentPage;
+  profile: AuthProfile | null;
+}) {
+  const workspace = useStudentWorkspace();
 
-type StudentLesson = {
-  id: string;
-  start: string;
-  title: string;
-  teacher: string;
-  kind: string;
-  time: string;
-  room: string;
-};
-
-const scheduleItems: ScheduleItem[] = [
-  {
-    id: "student-finished-class",
-    time: "09:00",
-    title: "Математический анализ",
-    meta: [
-      { icon: GraduationCap, label: "Проф. Смирнова А.В." },
-      { icon: MapPin, label: "Ауд. 215" },
-    ],
-    status: "Завершено",
-    statusVariant: "secondary",
-  },
-  {
-    id: "student-upcoming-class-1",
-    time: "09:00",
-    title: "Математический анализ",
-    meta: [
-      { icon: GraduationCap, label: "Проф. Смирнова А.В." },
-      { icon: MapPin, label: "Ауд. 215" },
-    ],
-    status: "Предстоит",
-    statusVariant: "primary",
-  },
-  {
-    id: "student-upcoming-class-2",
-    time: "09:00",
-    title: "Математический анализ",
-    meta: [
-      { icon: GraduationCap, label: "Проф. Смирнова А.В." },
-      { icon: MapPin, label: "Ауд. 215" },
-    ],
-    status: "Предстоит",
-    statusVariant: "primary",
-  },
-];
-
-const recentGrades: GradeItem[] = [
-  {
-    title: "Лабораторная работа №3",
-    subject: "Базы данных",
-    time: "2 дня назад",
-    grade: "5",
-  },
-  {
-    title: "Домашнее задание №5",
-    subject: "Python",
-    time: "3 дня назад",
-    grade: "4",
-    tone: "blue",
-  },
-  {
-    title: "Контрольная работа",
-    subject: "Мат. анализ",
-    time: "5 дней назад",
-    grade: "5",
-  },
-];
-
-const courseItems: CourseItem[] = [
-  {
-    title: "Программирование на Python",
-    teacher: "Доц. Иванов П.С.",
-    score: "4.5",
-    progress: 45,
-    next: "Сегодня, 11:00",
-  },
-  {
-    title: "Математический анализ",
-    teacher: "Проф. Смирнова А.В.",
-    score: "4.8",
-    progress: 67,
-    next: "Завтра, 09:00",
-  },
-  {
-    title: "Базы данных",
-    teacher: "Доц. Петрова М.И.",
-    score: "5.0",
-    progress: 72,
-    next: "Завтра, 14:00",
-  },
-  {
-    title: "Английский язык",
-    teacher: "Преп. Морозова О.И.",
-    score: "4.2",
-    progress: 55,
-    next: "Сегодня, 14:00",
-    tone: "blue",
-  },
-];
-
-const studentCourses: StudentCourse[] = [
-  {
-    id: "python",
-    title: "Программирование на Python",
-    teacher: "Доц. Иванов П.С.",
-    average: "4.5",
-    materials: [
-      {
-        id: "python-lecture-1",
-        title: "Лекция 1: Введение в Python",
-        kind: "PDF",
-        date: "15.02.2026",
-      },
-      { id: "python-lecture-2", title: "Лекция 2: Типы данных", kind: "PDF", date: "20.02.2026" },
-      {
-        id: "python-practice-1",
-        title: "Практика 1: Основы синтаксиса",
-        kind: "DOCX",
-        date: "22.02.2026",
-      },
-    ],
-  },
-];
-
-const studentGradeSummary: StudentGradeSummary[] = [
-  {
-    title: "Средний балл",
-    value: "4.5",
-    detail: "Отличный результат",
-    icon: Award,
-    tone: "positive",
-  },
-  { title: "Пятёрок", value: "10", detail: "65% от всех оценок", icon: TrendingUp },
-  { title: "Четвёрок", value: "5", detail: "35% от всех оценок", icon: BookOpen },
-  { title: "Всего оценок", value: "15", detail: "За семестр" },
-];
-
-const studentGradeCourses: StudentGradeCourse[] = [
-  {
-    title: "Программирование на Python",
-    teacher: "Доц. Иванов П.С.",
-    average: "4.5",
-    rows: [
-      { assignment: "ЛР №1", weight: "10%", grade: "5", tone: "positive" },
-      { assignment: "ЛР №2", weight: "10%", grade: "4", tone: "blue" },
-      { assignment: "ДЗ №1", weight: "5%", grade: "5", tone: "positive" },
-      { assignment: "Промежуточная", weight: "25%", grade: "4", tone: "blue" },
-    ],
-  },
-];
-
-const studentSchedule: StudentScheduleDay[] = [
-  {
-    day: "Понедельник",
-    count: "3 пары",
-    lessons: [
-      {
-        id: "monday-python-1",
-        start: "11:00",
-        title: "Программирование на Python",
-        teacher: "Доц. Иванов П.С.",
-        kind: "Практика",
-        time: "11:00 - 12:30",
-        room: "Ауд. 318",
-      },
-      {
-        id: "monday-python-2",
-        start: "11:00",
-        title: "Программирование на Python",
-        teacher: "Доц. Иванов П.С.",
-        kind: "Практика",
-        time: "11:00 - 12:30",
-        room: "Ауд. 318",
-      },
-      {
-        id: "monday-python-3",
-        start: "11:00",
-        title: "Программирование на Python",
-        teacher: "Доц. Иванов П.С.",
-        kind: "Практика",
-        time: "11:00 - 12:30",
-        room: "Ауд. 318",
-      },
-    ],
-  },
-];
-
-export function StudentDashboard({ page }: { page: StudentPage }) {
   if (page === "disciplines") {
-    return <StudentCoursesPage />;
+    return <StudentCoursesPage workspace={workspace} />;
   }
 
   if (page === "grades") {
-    return <StudentGradesPage />;
+    return <StudentGradesPage workspace={workspace} />;
   }
 
   if (page === "schedule") {
-    return <StudentSchedulePage />;
+    return <StudentCurriculumsPage workspace={workspace} title="Расписание" />;
   }
 
-  return <StudentHomePage />;
+  if (page === "curriculums") {
+    return <StudentCurriculumsPage workspace={workspace} title="Учебные планы" />;
+  }
+
+  return <StudentHomePage profile={profile} workspace={workspace} />;
 }
 
-function StudentHomePage() {
-  const metrics: Metric[] = [
-    {
-      title: "Средний балл",
-      value: "4.5",
-      description: "+0.5 от прошлого месяца",
-      icon: GraduationCap,
-      tone: "positive",
-    },
-    {
-      title: "Мои курсы",
-      value: "10",
-      description: "Активных курсов",
-      icon: BookOpen,
-    },
-    {
-      title: "Занятия сегодня",
-      value: "5",
-      description: "Осталось 2",
-      icon: Clock3,
-    },
-    {
-      title: "Посещаемость",
-      value: "90%",
-      description: "Отличный результат",
-      icon: BarChart3,
-      tone: "positive",
-    },
-  ];
+function StudentHomePage({
+  profile,
+  workspace,
+}: {
+  profile: AuthProfile | null;
+  workspace: StudentWorkspace;
+}) {
+  const metrics = useMemo(() => getStudentMetrics(workspace), [workspace]);
+  const recentGrades = useMemo(() => toRecentGradeItems(workspace.grades), [workspace.grades]);
+  const courseItems = useMemo(() => toCourseItems(workspace.courses), [workspace.courses]);
+  const title = profile ? `Привет, ${profile.first_name}!` : "Привет!";
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeading description="четверг, 23 апреля 2026 г." title="Привет, Иван!" />
+      <PageHeading description="Сводка по вашим дисциплинам и оценкам" title={title} />
       <MetricsGrid metrics={metrics} />
       <div className="grid grid-cols-2 items-start gap-4">
         <DashboardSection
           className="h-[390px]"
-          description="Ваши занятия"
-          title="Расписание на сегодня"
+          description="Учебная нагрузка из ваших учебных планов"
+          title="Расписание"
         >
-          <ScheduleList items={scheduleItems} />
+          <ScheduleList items={toScheduleItems(workspace.courses)} />
         </DashboardSection>
         <DashboardSection description="Недавно выставленные" title="Последние оценки">
           <GradesList items={recentGrades} />
         </DashboardSection>
       </div>
       <DashboardSection className="min-h-[454px]" description="Прогресс обучения" title="Мои курсы">
-        <CourseGrid items={courseItems} />
+        {workspace.isLoading ? (
+          <EmptyState text="Загружаем курсы..." />
+        ) : (
+          <CourseGrid items={courseItems} />
+        )}
       </DashboardSection>
     </div>
   );
 }
 
-function StudentCoursesPage() {
+function StudentCoursesPage({ workspace }: { workspace: StudentWorkspace }) {
   return (
     <div className="flex flex-col gap-6">
-      <PageHeading description="Ваши курсы и учебные материалы" title="Мои курсы" />
+      <PageHeading description="Ваши дисциплины из учебного плана группы" title="Мои курсы" />
       <div className="flex flex-col gap-4">
-        {studentCourses.map((course) => (
+        {workspace.isLoading && <EmptyState text="Загружаем курсы..." />}
+        {!workspace.isLoading && workspace.courses.length === 0 && (
+          <EmptyState text="Для вашей группы пока нет учебных планов." />
+        )}
+        {workspace.courses.map((course) => (
           <StudentCourseCard course={course} key={course.id} />
         ))}
       </div>
@@ -362,17 +186,27 @@ function StudentCoursesPage() {
   );
 }
 
-function StudentGradesPage() {
+function StudentGradesPage({ workspace }: { workspace: StudentWorkspace }) {
+  const summary = useMemo(() => getStudentGradeSummary(workspace.grades), [workspace.grades]);
+  const gradeCourses = useMemo(
+    () => toStudentGradeCourses(workspace.courses, workspace.grades),
+    [workspace.courses, workspace.grades],
+  );
+
   return (
     <div className="flex flex-col gap-6 pb-4">
       <PageHeading description="Ваша успеваемость по всем курсам" title="Мои оценки" />
       <div className="grid grid-cols-4 gap-4">
-        {studentGradeSummary.map((item) => (
+        {summary.map((item) => (
           <StudentGradeSummaryCard item={item} key={item.title} />
         ))}
       </div>
       <div className="flex flex-col gap-4">
-        {studentGradeCourses.map((course) => (
+        {workspace.isLoading && <EmptyState text="Загружаем оценки..." />}
+        {!workspace.isLoading && gradeCourses.length === 0 && (
+          <EmptyState text="Оценок пока нет." />
+        )}
+        {gradeCourses.map((course) => (
           <StudentGradeCourseCard course={course} key={course.title} />
         ))}
       </div>
@@ -380,29 +214,18 @@ function StudentGradesPage() {
   );
 }
 
-function StudentSchedulePage() {
+function StudentCurriculumsPage({
+  workspace,
+  title,
+}: {
+  workspace: StudentWorkspace;
+  title: string;
+}) {
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <PageHeading description="Ваше расписание занятий на неделю" title="Расписание" />
-      <StudentScheduleCard />
+      <PageHeading description="Учебная нагрузка из ваших учебных планов" title={title} />
+      <StudentScheduleCard courses={workspace.courses} isLoading={workspace.isLoading} />
     </div>
-  );
-}
-
-function StudentTabs() {
-  return (
-    <Tabs defaultValue="materials">
-      <TabsList className="h-9 rounded-[14px] bg-muted p-[3px]">
-        <TabsTrigger className="h-[29px] rounded-[14px] px-2 text-sm font-medium" value="materials">
-          <FileText className="size-4" />
-          Материалы
-        </TabsTrigger>
-        <TabsTrigger className="h-[29px] rounded-[14px] px-2 text-sm font-medium" value="tasks">
-          <NotebookTabs className="size-4" />
-          Задания
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
   );
 }
 
@@ -415,7 +238,7 @@ function StudentCourseCard({ course }: { course: StudentCourse }) {
             {course.title}
           </CardTitle>
           <CardDescription className="text-base leading-6 text-muted-foreground">
-            {course.teacher}
+            {course.teacher} · {course.group} · {course.semester} семестр · {course.reportType}
           </CardDescription>
         </div>
         <CardAction>
@@ -425,41 +248,21 @@ function StudentCourseCard({ course }: { course: StudentCourse }) {
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-6 px-6 pb-6 pt-6">
-        <StudentTabs />
-        <div className="flex flex-col gap-2">
-          {course.materials.map((material) => (
-            <MaterialRow key={material.id} material={material} />
-          ))}
+        <div className="grid grid-cols-3 gap-4">
+          <CourseMetric label="Часов" value={course.hours} />
+          <CourseMetric label="Оценок" value={course.gradesCount} />
+          <CourseMetric label="Средний балл" value={course.average} />
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function MaterialRow({ material }: { material: StudentMaterial }) {
+function CourseMetric({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="flex h-[66px] items-center justify-between rounded-[10px] border border-border p-[13px]">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-blue-100 text-blue-700">
-          <FileText className="size-5" />
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-medium leading-5 text-foreground">
-            {material.title}
-          </div>
-          <div className="flex items-center gap-2 text-xs leading-4 text-muted-foreground">
-            <span>{material.kind}</span>
-            <span>{material.date}</span>
-          </div>
-        </div>
-      </div>
-      <Button
-        aria-label={`Скачать ${material.title}`}
-        className="h-8 w-9 rounded-lg"
-        variant="ghost"
-      >
-        <Download className="size-4" />
-      </Button>
+    <div className="flex flex-col gap-1 rounded-lg border border-border p-3">
+      <div className="text-2xl font-bold leading-8 text-card-foreground">{value}</div>
+      <div className="text-xs leading-4 text-muted-foreground">{label}</div>
     </div>
   );
 }
@@ -502,7 +305,7 @@ function StudentGradeCourseCard({ course }: { course: StudentGradeCourse }) {
             {course.title}
           </CardTitle>
           <CardDescription className="text-base leading-6 text-muted-foreground">
-            {course.teacher}
+            {course.rows.length} оценок
           </CardDescription>
         </div>
         <CardAction>
@@ -516,8 +319,8 @@ function StudentGradeCourseCard({ course }: { course: StudentGradeCourse }) {
           <Table>
             <TableHeader>
               <TableRow className="h-10 hover:bg-transparent">
-                <TableHead className="w-1/2">Задание</TableHead>
-                <TableHead className="w-[24%] text-center">Вес</TableHead>
+                <TableHead className="w-1/2">Запись</TableHead>
+                <TableHead className="w-[24%] text-center">Комментарий</TableHead>
                 <TableHead className="w-[26%] text-center">Оценка</TableHead>
               </TableRow>
             </TableHeader>
@@ -525,10 +328,8 @@ function StudentGradeCourseCard({ course }: { course: StudentGradeCourse }) {
               {course.rows.map((row) => (
                 <TableRow className="h-[57px]" key={row.assignment}>
                   <TableCell className="font-medium">{row.assignment}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge className="h-[22px] rounded-lg px-[9px]" variant="outline">
-                      {row.weight}
-                    </Badge>
+                  <TableCell className="text-center text-muted-foreground">
+                    {row.comment || "—"}
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-center">
@@ -563,97 +364,348 @@ function GradeBox({
   );
 }
 
-function StudentScheduleCard() {
+function StudentScheduleCard({
+  courses,
+  isLoading,
+}: {
+  courses: StudentCourse[];
+  isLoading: boolean;
+}) {
   return (
-    <Card className="min-h-[840px] gap-0 rounded-[14px] py-0 ring-border">
-      <CardHeader className="h-[70px] px-6 pb-0 pt-6">
-        <div className="flex h-10 items-start justify-between">
-          <div className="flex flex-col">
-            <CardTitle className="h-4 text-base font-medium leading-4 text-card-foreground">
-              Неделя
-            </CardTitle>
-            <CardDescription className="h-6 text-base leading-6 text-muted-foreground">
-              23 - 29 апреля 2026
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              aria-label="Предыдущая неделя"
-              className="size-9 rounded-lg"
-              size="icon"
-              variant="outline"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              aria-label="Следующая неделя"
-              className="size-9 rounded-lg"
-              size="icon"
-              variant="outline"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
+    <Card className="gap-0 rounded-[14px] py-0 ring-border">
+      <CardHeader className="px-6 pb-0 pt-6">
+        <div className="flex flex-col">
+          <CardTitle className="text-base font-medium leading-6 text-card-foreground">
+            Учебная нагрузка
+          </CardTitle>
+          <CardDescription className="text-base leading-6 text-muted-foreground">
+            По дисциплинам вашей группы
+          </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-6 px-6 pb-6 pt-6">
-        {studentSchedule.map((day) => (
-          <StudentScheduleDaySection day={day} key={day.day} />
+      <CardContent className="flex flex-col gap-3 px-6 pb-6 pt-6">
+        {isLoading && <EmptyState text="Загружаем учебные планы..." />}
+        {!isLoading && courses.length === 0 && (
+          <EmptyState text="Учебные планы пока не назначены." />
+        )}
+        {courses.map((course) => (
+          <div
+            className="flex items-center justify-between rounded-lg border border-border p-4"
+            key={course.id}
+          >
+            <div>
+              <div className="font-medium">{course.title}</div>
+              <div className="text-sm text-muted-foreground">
+                {course.teacher} · {course.group}
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>{course.hours} ч.</span>
+              <span>{course.semester} семестр</span>
+              <span>{course.reportType}</span>
+            </div>
+          </div>
         ))}
       </CardContent>
     </Card>
   );
 }
 
-function StudentScheduleDaySection({ day }: { day: StudentScheduleDay }) {
+function EmptyState({ text }: { text: string }) {
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex h-[27px] items-center gap-3">
-        <h3 className="text-lg font-semibold leading-[27px] text-foreground">{day.day}</h3>
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-sm leading-5 text-muted-foreground">{day.count}</span>
-      </div>
-      <div className="flex flex-col gap-3">
-        {day.lessons.map((lesson) => (
-          <StudentLessonCard key={lesson.id} lesson={lesson} />
-        ))}
-      </div>
-    </section>
+    <div className="rounded-lg border border-border p-8 text-center text-muted-foreground">
+      {text}
+    </div>
   );
 }
 
-function StudentLessonCard({ lesson }: { lesson: StudentLesson }) {
-  return (
-    <div className="flex h-[110px] rounded-[10px] border border-border px-[17px] pb-px pt-[17px]">
-      <div className="flex h-[76px] w-full items-start gap-4">
-        <div className="flex h-16 w-20 shrink-0 flex-col items-center justify-center rounded-[10px] bg-muted py-2.5">
-          <span className="text-xs leading-4 text-muted-foreground">Начало</span>
-          <span className="text-lg font-bold leading-7 text-foreground">{lesson.start}</span>
-        </div>
-        <div className="flex h-[76px] min-w-0 flex-1 flex-col gap-2">
-          <div className="flex h-12 items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h4 className="truncate text-base font-medium leading-6 text-foreground">
-                {lesson.title}
-              </h4>
-              <p className="text-sm leading-5 text-muted-foreground">{lesson.teacher}</p>
-            </div>
-            <Badge className="h-[22px] shrink-0 rounded-lg px-[9px]" variant="outline">
-              {lesson.kind}
-            </Badge>
-          </div>
-          <div className="flex gap-4 text-sm leading-5 text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Clock3 className="size-3.5" />
-              {lesson.time}
-            </span>
-            <span className="flex items-center gap-1">
-              <MapPin className="size-3.5" />
-              {lesson.room}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function useStudentWorkspace(): StudentWorkspace {
+  const [student, setStudent] = useState<ApiStudent | null>(null);
+  const [courses, setCourses] = useState<StudentCourse[]>([]);
+  const [grades, setGrades] = useState<StudentGradeRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadWorkspace = useCallback(async () => {
+    setIsLoading(true);
+    const [
+      studentResponse,
+      curriculumsResponse,
+      subjectsResponse,
+      groupsResponse,
+      gradesResponse,
+      teachersResponse,
+    ] = await Promise.all([
+      apiClient.GET("/students/me"),
+      apiClient.GET("/curriculums"),
+      apiClient.GET("/subjects"),
+      apiClient.GET("/groups"),
+      apiClient.GET("/grades"),
+      apiClient.GET("/teachers"),
+    ]);
+
+    if (
+      studentResponse.error ||
+      curriculumsResponse.error ||
+      subjectsResponse.error ||
+      groupsResponse.error ||
+      gradesResponse.error ||
+      teachersResponse.error
+    ) {
+      toast.error("Не удалось загрузить данные студента.");
+      setIsLoading(false);
+      return;
+    }
+
+    const currentStudent = studentResponse.data ?? null;
+    const studentCurriculums = (curriculumsResponse.data ?? []).filter(
+      (curriculum) => curriculum.group_id === currentStudent?.group_id,
+    );
+    const studentGrades = gradesResponse.data ?? [];
+    const nextCourses = toStudentCourses(
+      studentCurriculums,
+      subjectsResponse.data ?? [],
+      groupsResponse.data ?? [],
+      teachersResponse.data ?? [],
+      studentGrades,
+    );
+
+    setStudent(currentStudent);
+    setCourses(nextCourses);
+    setGrades(
+      toStudentGradeRecords(
+        studentGrades,
+        studentCurriculums,
+        subjectsResponse.data ?? [],
+        groupsResponse.data ?? [],
+      ),
+    );
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadWorkspace();
+  }, [loadWorkspace]);
+
+  return { courses, grades, isLoading, student };
+}
+
+function toStudentCourses(
+  curriculums: ApiCurriculum[],
+  subjects: ApiSubject[],
+  groups: ApiGroup[],
+  teachers: ApiProfile[],
+  grades: ApiGrade[],
+) {
+  const subjectMap = new Map(subjects.map((subject) => [subject.id, subject.title]));
+  const groupMap = new Map(groups.map((group) => [group.id, group.name]));
+  const teacherMap = new Map(teachers.map((teacher) => [teacher.user_id, getProfileName(teacher)]));
+
+  return curriculums.map((curriculum) => {
+    const courseGrades = grades.filter((grade) => grade.curriculum_id === curriculum.id);
+
+    return {
+      average: getAverage(courseGrades),
+      gradesCount: courseGrades.length,
+      group: groupMap.get(curriculum.group_id) ?? "Группа не указана",
+      hours: curriculum.hours ?? 0,
+      id: curriculum.id ?? "",
+      reportType: getReportTypeLabel(curriculum.report_type),
+      semester: curriculum.semester ?? 0,
+      teacher: teacherMap.get(curriculum.lead_by) ?? "Преподаватель не указан",
+      title: subjectMap.get(curriculum.subject_id) ?? "Дисциплина не указана",
+    };
+  });
+}
+
+function toStudentGradeRecords(
+  grades: ApiGrade[],
+  curriculums: ApiCurriculum[],
+  subjects: ApiSubject[],
+  groups: ApiGroup[],
+) {
+  const curriculumMap = new Map(curriculums.map((curriculum) => [curriculum.id, curriculum]));
+  const subjectMap = new Map(subjects.map((subject) => [subject.id, subject.title]));
+  const groupMap = new Map(groups.map((group) => [group.id, group.name]));
+
+  return grades.map((grade) => {
+    const curriculum = curriculumMap.get(grade.curriculum_id);
+
+    return {
+      comment: grade.comment ?? "",
+      courseTitle: subjectMap.get(curriculum?.subject_id) ?? "Дисциплина не указана",
+      groupName: groupMap.get(curriculum?.group_id) ?? "Группа не указана",
+      id: grade.id ?? "",
+      value: grade.value ?? 0,
+    };
+  });
+}
+
+function getStudentMetrics(workspace: StudentWorkspace): Metric[] {
+  return [
+    {
+      title: "Средний балл",
+      value: getAverage(workspace.grades.map((grade) => ({ value: grade.value }))),
+      description: "По всем оценкам",
+      icon: GraduationCap,
+      tone: "positive",
+    },
+    {
+      title: "Мои курсы",
+      value: String(workspace.courses.length),
+      description: "По учебному плану группы",
+      icon: BookOpen,
+    },
+    {
+      title: "Оценки",
+      value: String(workspace.grades.length),
+      description: "Всего выставлено",
+      icon: BarChart3,
+    },
+    {
+      title: "Часы",
+      value: String(workspace.courses.reduce((sum, course) => sum + course.hours, 0)),
+      description: "В учебных планах",
+      icon: Clock3,
+    },
+  ];
+}
+
+function getStudentGradeSummary(grades: StudentGradeRecord[]): StudentGradeSummary[] {
+  const excellent = grades.filter((grade) => grade.value === 5).length;
+  const good = grades.filter((grade) => grade.value === 4).length;
+
+  return [
+    {
+      title: "Средний балл",
+      value: getAverage(grades.map((grade) => ({ value: grade.value }))),
+      detail: grades.length > 0 ? "По всем оценкам" : "Оценок пока нет",
+      icon: Award,
+      tone: "positive",
+    },
+    {
+      title: "Пятёрок",
+      value: String(excellent),
+      detail: `${getPercent(excellent, grades.length)} от всех оценок`,
+      icon: TrendingUp,
+    },
+    {
+      title: "Четвёрок",
+      value: String(good),
+      detail: `${getPercent(good, grades.length)} от всех оценок`,
+      icon: BookOpen,
+    },
+    { title: "Всего оценок", value: String(grades.length), detail: "За всё время" },
+  ];
+}
+
+function toStudentGradeCourses(courses: StudentCourse[], grades: StudentGradeRecord[]) {
+  return courses
+    .map((course) => {
+      const rows = grades
+        .filter((grade) => grade.courseTitle === course.title)
+        .map((grade, index) => ({
+          assignment: `Оценка №${index + 1}`,
+          comment: grade.comment,
+          grade: String(grade.value),
+          tone: grade.value >= 5 ? ("positive" as const) : ("blue" as const),
+        }));
+
+      return {
+        average: course.average,
+        rows,
+        title: course.title,
+      };
+    })
+    .filter((course) => course.rows.length > 0);
+}
+
+function toRecentGradeItems(grades: StudentGradeRecord[]): GradeItem[] {
+  if (grades.length === 0) {
+    return [];
+  }
+
+  return grades.slice(0, 5).map((grade) => ({
+    grade: String(grade.value),
+    subject: grade.courseTitle,
+    time: "Недавно",
+    title: grade.comment || "Оценка",
+    ...(grade.value >= 5 ? {} : { tone: "blue" as const }),
+  }));
+}
+
+function toCourseItems(courses: StudentCourse[]): CourseItem[] {
+  return courses.map((course) => ({
+    href: "/curriculums",
+    next: `${course.semester} семестр`,
+    score: course.average,
+    teacher: course.teacher,
+    title: course.title,
+  }));
+}
+
+function toScheduleItems(courses: StudentCourse[]): ScheduleItem[] {
+  if (courses.length === 0) {
+    return [
+      {
+        id: "student-schedule-placeholder",
+        meta: [
+          { icon: GraduationCap, label: "Учебный план не назначен" },
+          { icon: MapPin, label: "Группа не указана" },
+        ],
+        status: "План",
+        time: "—",
+        title: "Расписание пока недоступно",
+      },
+    ];
+  }
+
+  return courses.slice(0, 3).map((course) => ({
+    id: course.id,
+    meta: [
+      { icon: GraduationCap, label: course.group },
+      { icon: MapPin, label: course.teacher },
+    ],
+    status: course.reportType,
+    time: `${course.semester} сем.`,
+    title: course.title,
+  }));
+}
+
+function getAverage(grades: { value?: number }[]) {
+  if (grades.length === 0) {
+    return "-";
+  }
+
+  const average = grades.reduce((sum, grade) => sum + (grade.value ?? 0), 0) / grades.length;
+  return average.toFixed(1);
+}
+
+function getPercent(count: number, total: number) {
+  if (total === 0) {
+    return "0%";
+  }
+
+  return `${Math.round((count / total) * 100)}%`;
+}
+
+function getReportTypeLabel(reportType: string | undefined) {
+  if (reportType === "exam") {
+    return "Экзамен";
+  }
+  if (reportType === "test") {
+    return "Зачёт";
+  }
+  if (reportType === "diff_test") {
+    return "Дифф. зачёт";
+  }
+
+  return "Отчётность не указана";
+}
+
+function getProfileName(profile: ApiProfile) {
+  return [profile.last_name, profile.first_name, profile.middle_name].filter(isFilled).join(" ");
+}
+
+function isFilled(value: string | undefined): value is string {
+  return typeof value === "string" && value.length > 0;
 }

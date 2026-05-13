@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { CalendarDays } from "lucide-react";
 import type { ReactNode } from "react";
@@ -57,8 +58,8 @@ export type CourseItem = {
   title: string;
   teacher: string;
   score: string;
-  progress: number;
   next: string;
+  href?: string;
   tone?: Tone;
 };
 
@@ -235,7 +236,7 @@ export function CourseGrid({ items }: { items: CourseItem[] }) {
     <div className="grid grid-cols-2 gap-4">
       {items.map((item) => (
         <div
-          className="flex h-[174px] flex-col gap-3 rounded-[10px] border border-border px-[17px] pb-px pt-[17px]"
+          className="flex h-[132px] flex-col justify-between rounded-[10px] border border-border px-[17px] pb-[17px] pt-[17px]"
           key={item.title}
         >
           <div className="flex h-12 items-start justify-between">
@@ -247,21 +248,25 @@ export function CourseGrid({ items }: { items: CourseItem[] }) {
             </div>
             <GradePill grade={item.score} tone={item.tone} />
           </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex h-5 items-center justify-between text-sm">
-              <span className="text-muted-foreground">Прогресс</span>
-              <span className="font-medium text-foreground">{item.progress}%</span>
-            </div>
-            <Progress className="h-2 bg-primary/20" value={item.progress} />
-          </div>
           <div className="flex h-8 items-center justify-between">
             <div className="flex items-center gap-1 text-sm leading-5 text-muted-foreground">
               <CalendarDays className="size-3.5" />
               <span>{item.next}</span>
             </div>
-            <Button className="h-8 px-3 text-muted-foreground" size="default" variant="ghost">
-              Открыть
-            </Button>
+            {item.href ? (
+              <Button
+                asChild={true}
+                className="h-8 px-3 text-muted-foreground"
+                size="default"
+                variant="ghost"
+              >
+                <Link to={item.href}>Открыть</Link>
+              </Button>
+            ) : (
+              <Button className="h-8 px-3 text-muted-foreground" size="default" variant="ghost">
+                Открыть
+              </Button>
+            )}
           </div>
         </div>
       ))}
