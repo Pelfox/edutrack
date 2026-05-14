@@ -6,6 +6,7 @@
     "api:generate": "openapi-typescript ../backend/docs/swagger.json -o src/api/schema.ts",
     "check": "biome check --config-path ./biome.json .",
     "check:fix": "biome check --config-path ./biome.json --write .",
+    "test": "vitest run --environment jsdom",
     "typecheck": "tsc -p tsconfig.json",
     "dev": "vite --port 3000",
     "build": "vite build",
@@ -20,9 +21,11 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^29.1.1",
     "openapi-typescript": "^7.13.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.11"
+    "vite": "^8.0.11",
+    "vitest": "^4.1.6"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
